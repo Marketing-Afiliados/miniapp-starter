@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import { getSiteUrl } from "@/lib/site-url";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "MiniApp Starter — Lanza productos SaaS más rápido",
     template: "%s | MiniApp Starter",

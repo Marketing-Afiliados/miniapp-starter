@@ -75,6 +75,13 @@ export interface WebhookEvent extends Record<string, unknown> {
   event_id: string;
   event_type: string;
   payload: Json;
+  buyer_email: string | null;
+  provider_subscription_id: string | null;
+  provider_transaction_id: string | null;
+  plan_id: string | null;
+  subscription_status: SubscriptionStatus | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
   processed: boolean;
   processed_at: string | null;
   error: string | null;

@@ -25,6 +25,7 @@ Starter reutilizable para lanzar Mini Apps y Micro-SaaS por suscripción sin rec
 - Acceso Premium centralizado con `hasActiveSubscription()`
 - Límites reutilizables con `canUseFeature()`
 - Webhook Hotmart autenticado, idempotente y con auditoría
+- Compras anteriores al registro conservadas y vinculadas tras confirmar el correo
 - Migraciones de esquema, trigger de perfiles y RLS
 
 ## Requisitos
@@ -47,16 +48,18 @@ La aplicación queda disponible en [http://localhost:3000](http://localhost:3000
 
 ## Variables de entorno
 
-| Variable | Alcance | Descripción |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Pública | URL del proyecto Supabase. |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Pública | Publishable key de Supabase. |
-| `NEXT_PUBLIC_APP_URL` | Pública | URL canónica, sin barra final. En local: `http://localhost:3000`. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Privada | Clave de servidor para procesar webhooks. Nunca usar en Client Components. |
-| `HOTMART_HOTTOK` | Privada | Token que Hotmart envía en `X-HOTMART-HOTTOK`. |
-| `HOTMART_DEFAULT_PLAN_CODE` | Privada/opcional | Plan de respaldo si el producto Hotmart no está mapeado en `provider_product_id`. |
+| Variable | Producción | Preview | Development | Tipo | Origen |
+| --- | --- | --- | --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Requerida | Requerida | Requerida | Pública | Supabase → Project Settings → API. |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Requerida | Requerida | Requerida | Pública | Supabase → Project Settings → API Keys. |
+| `NEXT_PUBLIC_SITE_URL` | URL `*.vercel.app` real | Dejar vacía | Dejar vacía | Pública | URL del deployment Production. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Requerida | Solo previews confiables | Solo si se prueba billing local | Secreta | Supabase → Project Settings → API Keys. |
+| `HOTMART_HOTTOK` | Requerida para webhook | No | Solo si se prueba webhook local | Secreta | Configuración Webhook de Hotmart. |
+| `HOTMART_DEFAULT_PLAN_CODE` | Opcional | No | Opcional | Privada | `plans.code` del plan de respaldo. |
 
-No copies secretos al repositorio. `.env.local` está ignorado y `.env.example` solo contiene nombres y valores de desarrollo no sensibles.
+Vercel proporciona `VERCEL_URL` automáticamente. El código la usa para Preview cuando `NEXT_PUBLIC_SITE_URL` no está definida; en local usa un único fallback centralizado a `http://localhost:3000`.
+
+`HOTMART_CLIENT_ID` y `HOTMART_CLIENT_SECRET` no se usan: el webhook 2.0 actual se autentica con HOTTOK. No copies secretos al repositorio. `.env.local` está ignorado y `.env.example` solo contiene nombres y comentarios.
 
 ## Supabase
 
@@ -67,7 +70,8 @@ Los archivos están ordenados en:
 ```text
 supabase/migrations/
 ├── 202608080001_core_schema.sql
-└── 202608080002_rls.sql
+├── 202608080002_rls.sql
+└── 202608080003_pending_billing_links.sql
 ```
 
 En un proyecto existente, revisa y ejecuta ambos archivos en ese orden desde SQL Editor. Si el proyecto está enlazado con Supabase CLI, también puedes aplicar el historial con:
@@ -81,16 +85,19 @@ La primera migración conserva tablas existentes, completa las columnas del cont
 
 La segunda migración reemplaza las políticas de las cinco tablas del Starter. Esto evita que una política permisiva anterior deje datos expuestos. Si esas tablas son compartidas con otra aplicación, revisa esa migración antes de ejecutarla.
 
+La tercera migración solo agrega columnas e índices para conservar una compra cuyo comprador todavía no tiene cuenta. No elimina ni trunca datos.
+
 ### 2. Configurar Auth
 
 En **Authentication → URL Configuration** configura:
 
-- Site URL local: `http://localhost:3000`
-- Redirect URL local: `http://localhost:3000/auth/callback`
-- Site URL de producción: el dominio de Vercel
-- Redirect URL de producción: `https://tu-dominio.com/auth/callback`
+- **Site URL:** la URL Production real de Vercel, por ejemplo `https://proyecto-real.vercel.app`.
+- **Redirect URLs:**
+  - `http://localhost:3000/auth/callback`
+  - `https://proyecto-real.vercel.app/auth/callback`
+  - para Preview, un patrón permitido por Supabase que cubra únicamente los deployments Vercel de este proyecto.
 
-Activa o desactiva la confirmación de correo según el flujo comercial. El código soporta ambos modos.
+Registro, confirmación y recuperación regresan por `/auth/callback`; el callback redirige internamente al dashboard o a `/update-password`. Activa o desactiva la confirmación de correo según el flujo comercial. El código soporta ambos modos.
 
 ### 3. Crear el primer admin
 
@@ -191,11 +198,66 @@ POST /api/webhooks/hotmart
 
 Configura en Hotmart Webhook 2.0:
 
-1. URL: `https://tu-dominio.com/api/webhooks/hotmart`
-2. Token HOTTOK igual al valor privado desplegado.
-3. Eventos recomendados: compra aprobada, completa, atrasada, cancelada, expirada, reembolsada y chargeback.
+1. Busca **Tools → Webhook (API and notifications)** o la herramienta equivalente llamada Webhook/Postback.
+2. Nombre sugerido: `MiniApp Starter - Production`.
+3. Selecciona el producto real que corresponde al plan.
+4. Versión: `2.0.0`.
+5. URL: `https://URL-REAL.vercel.app/api/webhooks/hotmart`.
+6. Selecciona estos eventos reales:
+   - `PURCHASE_APPROVED`
+   - `PURCHASE_COMPLETE`
+   - `PURCHASE_CANCELED`
+   - `PURCHASE_DELAYED`
+   - `PURCHASE_EXPIRED`
+   - `PURCHASE_REFUNDED`
+   - `PURCHASE_CHARGEBACK`
 
 El endpoint valida el header oficial `X-HOTMART-HOTTOK`, limita el tamaño, registra primero el evento con una clave única y actualiza la suscripción. Los eventos repetidos reciben respuesta exitosa sin volver a procesarse.
+
+### Mapping de estados
+
+| Evento Hotmart | Estado interno |
+| --- | --- |
+| `PURCHASE_APPROVED`, `PURCHASE_COMPLETE` | `active` |
+| `PURCHASE_DELAYED` | `past_due` |
+| `PURCHASE_CANCELED`, `SUBSCRIPTION_CANCELLATION` | `cancelled` |
+| `PURCHASE_EXPIRED`, `SUBSCRIPTION_EXPIRED` | `expired` |
+| `PURCHASE_REFUNDED`, `PURCHASE_CHARGEBACK` | `refunded` |
+
+### Matching comprador–usuario
+
+Hotmart no crea usuarios Supabase. El matching requiere:
+
+1. correo normalizado del comprador;
+2. `subscriber.code` de Hotmart, o la transacción como respaldo;
+3. producto Hotmart mapeado a un plan activo.
+
+Si la compra llega antes del registro, `webhook_events` conserva correo, identificadores, plan, estado y período con `processed=false`. Cuando una cuenta con ese mismo correo queda confirmada, el servidor vincula los eventos pendientes en orden y hace upsert de una única suscripción. La conciliación exige correo confirmado y service role; nunca confía en datos enviados por el navegador.
+
+### Prueba y diagnóstico
+
+Usa el envío de prueba disponible en la configuración Webhook 2.0 o una compra de prueba del producto. Debes obtener HTTP 200 y ver un registro en `/admin/webhooks`. Reenvía el mismo evento: el mismo `provider + event_id` debe seguir apareciendo una sola vez.
+
+El historial se revisa en la herramienta Webhook/Postback de Hotmart y en `/admin/webhooks`; el payload completo no se muestra en el panel.
+
+### Desarrollo sin compras reales
+
+No existe bypass Premium en código. Para una prueba local segura crea una suscripción manual en el proyecto de desarrollo y usa fechas acotadas:
+
+```sql
+insert into public.subscriptions (
+  user_id, plan_id, provider, provider_subscription_id, status,
+  started_at, current_period_start, current_period_end
+)
+values (
+  'USER_UUID', 'PLAN_UUID', 'manual-dev', 'dev-USER_UUID', 'active',
+  now(), now(), now() + interval '7 days'
+)
+on conflict (provider, provider_subscription_id)
+do update set status = 'active', current_period_end = excluded.current_period_end;
+```
+
+No uses esta técnica en producción.
 
 Documentación oficial: [Purchase Webhook 2.0](https://developers.hotmart.com/docs/en/2.0.0/webhook/purchase-webhook/).
 
@@ -237,13 +299,98 @@ El build incluye compilación de producción y comprobación estricta de TypeScr
 
 ## Deployment en Vercel
 
-1. Publica el repositorio en GitHub e impórtalo en Vercel.
-2. Mantén pnpm como package manager.
-3. Carga todas las variables de `.env.example` en Vercel; usa valores reales y privados donde corresponda.
-4. Establece `NEXT_PUBLIC_APP_URL` con el dominio definitivo.
-5. Actualiza Site URL y Redirect URLs en Supabase.
-6. Despliega y registra la URL del webhook en Hotmart.
-7. Envía un evento de prueba desde Hotmart y comprueba su estado en `/admin/webhooks`.
+La conexión esperada es GitHub → Vercel, con `main` como única Production Branch.
+
+### Importar el repositorio
+
+En Vercel abre **Add New → Project → Import Git Repository** y selecciona `miniapp-starter`:
+
+| Campo | Valor |
+| --- | --- |
+| Framework Preset | Next.js |
+| Root Directory | `./` (raíz del repositorio) |
+| Build Command | Default (`pnpm build`) |
+| Install Command | `pnpm install` |
+| Output Directory | Default de Next.js |
+| Production Branch | `main` |
+
+No se necesita `vercel.json`: el proyecto usa las convenciones estándar de Next.js y Vercel.
+
+En **Project Settings → Environment Variables** agrega las variables de la tabla anterior. Para el primer deploy puedes dejar `NEXT_PUBLIC_SITE_URL` vacía; Vercel proporciona `VERCEL_URL`. Cuando aparezca la URL Production real, guarda esa URL en `NEXT_PUBLIC_SITE_URL` para Production y vuelve a desplegar.
+
+### Preview y Production
+
+```text
+feature branch → push → Vercel Preview → QA → merge main → Vercel Production
+```
+
+- Solo `main` es Production.
+- Preview reutiliza las claves públicas de Supabase.
+- No expongas service role ni HOTTOK a previews de ramas no confiables.
+- Hotmart debe apuntar exclusivamente al deployment Production, salvo una integración de prueba separada y explícita.
+
+Para redirects de Preview, agrega en Supabase un patrón que limite el acceso a los dominios Preview de este proyecto. No conviertas una URL Preview en Site URL.
+
+### Después del primer deployment
+
+1. Copia la URL marcada como **Production** en Vercel.
+2. Configúrala como `NEXT_PUBLIC_SITE_URL` en el ambiente Production.
+3. En Supabase, úsala como Site URL y agrega `/auth/callback` a Redirect URLs.
+4. Redeploya Production.
+5. Configura Hotmart con `https://URL-PRODUCTION/api/webhooks/hotmart`.
+
+### Dominio personalizado futuro
+
+Cuando se agregue `app.midominio.com`, actualiza:
+
+- Vercel → Settings → Domains;
+- `NEXT_PUBLIC_SITE_URL`;
+- Supabase Site URL y Redirect URLs;
+- URL del webhook Hotmart;
+- cualquier callback externo.
+
+Mantén temporalmente el dominio `*.vercel.app` autorizado hasta comprobar el cambio.
+
+## Logs y troubleshooting
+
+| Problema | Dónde revisar |
+| --- | --- |
+| Build o función server falla | Vercel → Project → Deployments → deployment → Build Logs / Runtime Logs. |
+| Login o callback falla | Supabase → Authentication → Logs; Vercel Runtime Logs; URL Configuration. |
+| Usuario no obtiene perfil | Supabase → Table Editor → `profiles`; Database → Triggers; logs de Postgres. |
+| Webhook falla | Hotmart → Webhook/Postback → historial; Vercel Runtime Logs; `/admin/webhooks`. |
+| Suscripción no se activa | `webhook_events.error`, mapping `plans.provider_product_id`, correo del comprador y `subscriptions`. |
+| Acceso incorrecto o RLS | Supabase → Table Editor / SQL Editor → políticas y grants de la migración RLS. |
+
+Los logs de aplicación no imprimen HOTTOK, service role ni el payload del webhook.
+
+## Checklist del primer deployment
+
+- [x] `pnpm install` OK
+- [x] `pnpm lint` OK
+- [x] `pnpm build` OK
+- [ ] Migraciones Supabase aplicadas
+- [ ] GitHub actualizado
+- [ ] Vercel conectado al repositorio
+- [ ] Production Branch = `main`
+- [ ] Environment Variables Production
+- [ ] Production deployment OK
+- [ ] `NEXT_PUBLIC_SITE_URL` con URL real
+- [ ] Supabase Site URL
+- [ ] Supabase Redirect URLs
+- [ ] Registro y confirmación OK en producción
+- [ ] Login, logout y reset password OK
+- [ ] Usuario normal bloqueado en `/admin`
+- [ ] Admin permitido en `/admin`
+- [ ] Lectura de plan y suscripción OK
+- [ ] Webhook URL pública
+- [ ] Hotmart Webhook 2.0 configurado
+- [ ] Validación HOTTOK OK
+- [ ] Evento duplicado no reprocesado
+- [ ] Actualización de suscripción OK
+- [ ] Compra previa al registro reconciliada
+- [ ] RLS comprobado
+- [x] Secretos fuera de Git
 
 ## Crear una nueva Mini App
 

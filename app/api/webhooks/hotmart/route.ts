@@ -42,6 +42,7 @@ export async function POST(request: Request) {
       ok: true,
       duplicate: result.duplicate,
       processed: result.processed,
+      pending: result.pending,
     });
   } catch (error) {
     if (error instanceof SyntaxError) {

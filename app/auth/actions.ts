@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth/guards";
+import { ensureProfile } from "@/lib/auth/profile";
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AuthActionState {
@@ -26,11 +28,6 @@ function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-function appUrl() {
-  const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  return configured || "http://localhost:3000";
-}
-
 export async function loginAction(
   _previousState: AuthActionState,
   formData: FormData,
@@ -46,7 +43,7 @@ export async function loginAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     const message = error.message.toLowerCase().includes("email not confirmed")
@@ -55,6 +52,7 @@ export async function loginAction(
     return { status: "error", message };
   }
 
+  if (data.user) await ensureProfile(data.user);
   redirect("/dashboard");
 }
 
@@ -80,7 +78,7 @@ export async function registerAction(
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${appUrl()}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${getSiteUrl()}/auth/callback?next=/dashboard`,
     },
   });
 
@@ -95,6 +93,7 @@ export async function registerAction(
   }
 
   if (data.session) {
+    if (data.user) await ensureProfile(data.user);
     redirect("/dashboard");
   }
 
@@ -120,7 +119,7 @@ export async function forgotPasswordAction(
 
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${appUrl()}/auth/callback?next=/update-password`,
+    redirectTo: `${getSiteUrl()}/auth/callback?next=/update-password`,
   });
 
   return {
