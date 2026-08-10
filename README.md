@@ -20,6 +20,7 @@ La autenticación, billing, planes, usage, webhooks y panel admin del Starter se
 - Dashboard con cotizaciones del mes, valor cotizado, ganancia, clientes y actividad reciente.
 - Perfil del negocio y onboarding inicial.
 - Logo del negocio en Supabase Storage, visible en las propuestas PDF.
+- País y moneda de trabajo: USD/EUR siempre disponibles y moneda local para Argentina, México, Chile y Colombia.
 - Clientes con búsqueda, edición y archivado lógico.
 - Servicios y materiales reutilizables.
 - Creador de cotizaciones con líneas dinámicas y conceptos personalizados.
@@ -54,6 +55,8 @@ Con margen fijo, el valor es dinero en centavos. Si existe precio final manual:
 ganancia estimada = precio final - costo total
 ```
 
+El PDF usa un desglose **comercial reconciliado**. Conserva los precios de venta de los conceptos y distribuye cualquier diferencia hasta el precio final entre montaje/coordinación, logística/transporte y servicios adicionales, según los costos internos asociados. La suma de las líneas siempre coincide exactamente con el precio final; costo, margen y ganancia nunca se exponen al cliente.
+
 ## Modelo de datos
 
 Tablas existentes preservadas:
@@ -75,6 +78,8 @@ Tablas DecoQuote:
 - `quote_counters` (contador anual interno)
 
 `quotes` y `quote_items` guardan importes con sufijo `_cents`. `customers.deleted_at` implementa archivado lógico. El número se genera en PostgreSQL con formato `DQ-YYYY-000001`.
+
+`business_profiles.country_code` determina las monedas disponibles en el perfil. La selección es explícita para evitar errores de geolocalización por VPN, viajes o configuración del navegador.
 
 ## Seguridad y RLS
 
@@ -130,6 +135,7 @@ En un proyecto ya configurado, aplica las migraciones DecoQuote en orden:
 ```text
 supabase/migrations/202608090004_decoquote.sql
 supabase/migrations/202608100001_business_logo_storage.sql
+supabase/migrations/202608100002_business_country.sql
 ```
 
 Con Supabase CLI:
@@ -141,7 +147,7 @@ supabase db push
 
 O copia el contenido completo en Supabase Dashboard → SQL Editor → New query → Run.
 
-Las migraciones son incrementales: no contienen `DROP TABLE`, no borran Auth ni las tablas del Starter. La segunda crea el bucket público `business-logos`, limita archivos a PNG/JPG de 2 MB y protege escritura/eliminación por propietario mediante RLS. La primera también crea o actualiza el plan:
+Las migraciones son incrementales: no contienen `DROP TABLE`, no borran Auth ni las tablas del Starter. La segunda crea el bucket público `business-logos`, limita archivos a PNG/JPG de 2 MB y protege escritura/eliminación por propietario mediante RLS. La tercera agrega el país del negocio para ofrecer USD, EUR y la moneda local correspondiente. La primera también crea o actualiza el plan:
 
 ```text
 code: decoquote-pro
@@ -191,7 +197,7 @@ El acceso se consulta centralmente en `lib/decoquote/access.ts` y reutiliza `lib
 
 `GET /api/quotes/[id]/pdf` valida sesión, propiedad y plan. `pdf-lib` genera la propuesta en servidor.
 
-Incluye negocio, cliente, evento, conceptos, cantidad, precio, total y condiciones. No incluye costos, margen ni rentabilidad.
+Incluye negocio, cliente, evento, conceptos, cantidad, importes comerciales reconciliados, subtotal, total y condiciones. Montaje, logística y servicios adicionales aparecen como rubros comerciales cuando corresponden. No incluye costos internos, margen ni rentabilidad.
 
 ## Vercel
 

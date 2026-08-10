@@ -16,11 +16,18 @@ export function fromCents(cents: number): number {
 }
 
 export function formatCurrency(cents: number, currency = "USD", locale?: string): string {
-  const resolvedLocale = locale ?? (currency === "EUR" ? "es-ES" : "es-EC");
+  const currencyLocales: Record<string, string> = {
+    USD: "es-EC",
+    EUR: "es-ES",
+    ARS: "es-AR",
+    MXN: "es-MX",
+    CLP: "es-CL",
+    COP: "es-CO",
+  };
+  const resolvedLocale = locale ?? currencyLocales[currency] ?? "es-EC";
   return new Intl.NumberFormat(resolvedLocale, {
     style: "currency",
     currency,
-    minimumFractionDigits: 2,
   }).format(fromCents(cents));
 }
 

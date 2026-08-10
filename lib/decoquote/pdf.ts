@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { buildCommercialProposalLines } from "./commercial-lines";
 import { formatCurrency } from "./money";
 import type { BusinessProfile, Customer, Quote, QuoteItem } from "@/types/database";
 
@@ -49,6 +50,15 @@ export async function generateQuotePdf({ business, customer, quote, items, logo 
   };
   const text = (value: string, x: number, size = 10, font = regular, color = rgb(0.25, 0.27, 0.35)) => {
     page.drawText(clean(value), { x, y, size, font, color });
+  };
+  const textRight = (value: string, rightX: number, size = 10, font = regular, color = rgb(0.25, 0.27, 0.35)) => {
+    const cleaned = clean(value);
+    page.drawText(cleaned, { x: rightX - font.widthOfTextAtSize(cleaned, size), y, size, font, color });
+  };
+  const fittedSize = (value: string, font: PDFFont, preferred: number, min: number, maxWidth: number) => {
+    let size = preferred;
+    while (size > min && font.widthOfTextAtSize(clean(value), size) > maxWidth) size -= 1;
+    return size;
   };
   const paragraph = (value: string, x: number, width: number, size = 9, lineHeight = 14) => {
     const lines = wrap(value, regular, size, width);
@@ -102,32 +112,41 @@ export async function generateQuotePdf({ business, customer, quote, items, logo 
 
   page.drawRectangle({ x: MARGIN, y: y - 5, width: PAGE_WIDTH - MARGIN * 2, height: 25, color: rgb(0.12, 0.13, 0.2) });
   text("DESCRIPCION", MARGIN + 10, 8, bold, rgb(1, 1, 1));
-  text("CANT.", 350, 8, bold, rgb(1, 1, 1));
-  text("PRECIO", 405, 8, bold, rgb(1, 1, 1));
-  text("TOTAL", 500, 8, bold, rgb(1, 1, 1));
+  text("CANTIDAD", 390, 8, bold, rgb(1, 1, 1));
+  textRight("IMPORTE", PAGE_WIDTH - MARGIN - 10, 8, bold, rgb(1, 1, 1));
   y -= 28;
 
-  for (const item of items) {
-    const nameLines = wrap(item.name, bold, 9, 270);
-    const descriptionLines = item.description ? wrap(item.description, regular, 8, 270) : [];
+  const commercialLines = buildCommercialProposalLines(quote, items);
+  for (const line of commercialLines) {
+    const nameLines = wrap(line.name, bold, 9, 300);
+    const descriptionLines = line.description ? wrap(line.description, regular, 8, 300) : [];
     const height = Math.max(34, nameLines.length * 12 + descriptionLines.length * 11 + 10);
     ensure(height + 8);
     const rowTop = y;
     for (const line of nameLines) { text(line, MARGIN + 10, 9, bold, rgb(0.09, 0.1, 0.18)); y -= 12; }
     for (const line of descriptionLines) { text(line, MARGIN + 10, 8); y -= 11; }
-    text(`${item.quantity}`, 350, 9);
-    text(formatCurrency(item.unit_price_cents, quote.currency), 405, 9);
-    text(formatCurrency(item.total_price_cents, quote.currency), 500, 9, bold, rgb(0.09, 0.1, 0.18));
+    y = rowTop;
+    text(line.quantityLabel, 390, 9);
+    textRight(
+      line.amountCents > 0 ? formatCurrency(line.amountCents, quote.currency) : "Incluido",
+      PAGE_WIDTH - MARGIN - 10,
+      9,
+      bold,
+      rgb(0.09, 0.1, 0.18),
+    );
     y = rowTop - height;
     page.drawLine({ start: { x: MARGIN, y: y + 5 }, end: { x: PAGE_WIDTH - MARGIN, y: y + 5 }, thickness: 0.5, color: rgb(0.88, 0.88, 0.92) });
   }
 
-  ensure(125);
+  ensure(145);
   y -= 18;
-  text("TOTAL DE LA PROPUESTA", 340, 9, bold, rgb(0.25, 0.27, 0.35));
-  y -= 48;
+  text("SUBTOTAL COMERCIAL", 340, 9, bold, rgb(0.25, 0.27, 0.35));
+  textRight(formatCurrency(quote.final_price_cents, quote.currency), PAGE_WIDTH - MARGIN, 10, bold, rgb(0.09, 0.1, 0.18));
+  y -= 46;
   page.drawRectangle({ x: 335, y: y - 8, width: 212, height: 42, color: rgb(0.48, 0.27, 0.93) });
-  text(formatCurrency(quote.final_price_cents, quote.currency), 420, 20, bold, rgb(1, 1, 1));
+  text(`TOTAL (${quote.currency})`, 350, 8, bold, rgb(1, 1, 1));
+  const finalPriceLabel = formatCurrency(quote.final_price_cents, quote.currency);
+  textRight(finalPriceLabel, 532, fittedSize(finalPriceLabel, bold, 17, 11, 112), bold, rgb(1, 1, 1));
   y -= 50;
 
   if (quote.terms) {

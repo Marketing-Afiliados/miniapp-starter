@@ -5,6 +5,7 @@ import { saveQuoteAction } from "@/app/dashboard/quotes/actions";
 import { FormFeedback } from "@/components/decoquote/form-feedback";
 import { SubmitButton } from "@/components/decoquote/submit-button";
 import { calculateQuote } from "@/lib/decoquote/calculations";
+import { buildCommercialProposalLines } from "@/lib/decoquote/commercial-lines";
 import { centsToInput, formatCurrency, toCents, toDecimal } from "@/lib/decoquote/money";
 import { initialActionState } from "@/types/action-state";
 import type { Customer, Material, Service } from "@/types/database";
@@ -59,6 +60,22 @@ export function QuoteEditor({
     items: items.map((item) => ({ itemType: item.itemType, quantity: item.quantity, unitCostCents: item.unitCostCents, unitPriceCents: item.unitPriceCents })),
     laborCostCents, transportCostCents, otherCostCents, marginType, marginValue, finalPriceCents,
   }), [items, laborCostCents, transportCostCents, otherCostCents, marginType, marginValue, finalPriceCents]);
+  const commercialPreview = useMemo(() => buildCommercialProposalLines(
+    {
+      final_price_cents: calculation.finalPriceCents,
+      labor_cost_cents: calculation.laborCostCents,
+      transport_cost_cents: calculation.transportCostCents,
+      other_cost_cents: calculation.otherCostCents,
+    },
+    items.map((item) => ({
+      id: item.id,
+      name: item.name || "Concepto sin nombre",
+      description: item.description,
+      quantity: item.quantity,
+      unit: item.unit,
+      total_price_cents: Math.round(item.quantity * item.unitPriceCents),
+    })),
+  ), [calculation, items]);
 
   const payload: QuoteEditorPayload = {
     customerId, eventName, eventType, eventDate, eventLocation, validUntil: validUntil || null,
@@ -186,6 +203,19 @@ export function QuoteEditor({
             <div className="flex justify-between"><dt className="text-slate-300">Ganancia estimada</dt><dd className={calculation.hasLoss ? "text-rose-300" : "text-emerald-300"}>{formatCurrency(calculation.estimatedProfitCents, currency)}</dd></div>
           </dl>
           <div className="mt-5 rounded-xl bg-violet-500 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-violet-100">Precio recomendado</p><p className="mt-1 text-3xl font-semibold">{formatCurrency(calculation.recommendedPriceCents, currency)}</p>{finalPriceCents !== null ? <p className="mt-2 text-sm text-violet-100">Precio final: {formatCurrency(calculation.finalPriceCents, currency)}</p> : null}</div>
+          <div className="mt-4 rounded-xl border border-slate-700 bg-slate-900 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-violet-300">Desglose comercial del PDF</p>
+            <div className="mt-3 space-y-2 text-xs">
+              {commercialPreview.map((line) => (
+                <div className="flex items-start justify-between gap-3" key={line.id}>
+                  <span className="text-slate-300">{line.name}</span>
+                  <span className="shrink-0 font-semibold">{line.amountCents > 0 ? formatCurrency(line.amountCents, currency) : "Incluido"}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex justify-between border-t border-slate-700 pt-3 text-sm font-semibold"><span>Total cliente</span><span>{formatCurrency(calculation.finalPriceCents, currency)}</span></div>
+            <p className="mt-3 text-[11px] leading-4 text-slate-400">Los importes son comerciales y suman el precio final. Costos, margen y ganancia permanecen privados.</p>
+          </div>
           <div className="mt-5"><SubmitButton pendingLabel="Guardando cotización…">{quoteId ? "Guardar cambios" : "Guardar cotización"}</SubmitButton></div>
         </aside>
       </div>

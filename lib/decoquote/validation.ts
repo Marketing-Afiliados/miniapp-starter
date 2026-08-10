@@ -1,7 +1,9 @@
 import { z } from "zod";
-import { CURRENCY_OPTIONS } from "@/lib/decoquote/constants";
-
-const supportedCurrencies = CURRENCY_OPTIONS.map(({ code }) => code) as ["USD", "EUR"];
+import {
+  getCurrencyOptionsForCountry,
+  SUPPORTED_COUNTRY_CODES,
+  SUPPORTED_CURRENCY_CODES,
+} from "@/lib/decoquote/constants";
 
 const optionalText = (max: number) =>
   z.string().trim().max(max, `Usa máximo ${max} caracteres.`).transform((value) => value || null);
@@ -20,9 +22,19 @@ export const businessProfileSchema = z.object({
   whatsapp: z.string().trim().min(7, "Ingresa un WhatsApp válido.").max(30),
   instagram: optionalText(80),
   address: optionalText(300),
-  currency: z.enum(supportedCurrencies, { message: "Selecciona dólares o euros." }),
+  countryCode: z.enum(SUPPORTED_COUNTRY_CODES, { message: "Selecciona tu país." }),
+  currency: z.enum(SUPPORTED_CURRENCY_CODES, { message: "Selecciona una moneda disponible." }),
   defaultMarginPercentage: money.max(1000, "Revisa el porcentaje."),
   defaultTerms: optionalText(3000),
+}).superRefine((data, context) => {
+  const available = getCurrencyOptionsForCountry(data.countryCode);
+  if (!available.some((option) => option.code === data.currency)) {
+    context.addIssue({
+      code: "custom",
+      path: ["currency"],
+      message: "La moneda no está disponible para el país seleccionado.",
+    });
+  }
 });
 
 export const customerSchema = z.object({

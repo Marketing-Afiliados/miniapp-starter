@@ -1,11 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
 import { saveBusinessProfileAction } from "@/app/dashboard/decoquote-actions";
 import { FormFeedback } from "@/components/decoquote/form-feedback";
 import { SubmitButton } from "@/components/decoquote/submit-button";
-import { CURRENCY_OPTIONS } from "@/lib/decoquote/constants";
+import {
+  COUNTRY_OPTIONS,
+  getCurrencyOptionsForCountry,
+  type SupportedCountry,
+  type SupportedCurrency,
+} from "@/lib/decoquote/constants";
 import { initialActionState } from "@/types/action-state";
 import type { BusinessProfile } from "@/types/database";
 
@@ -23,6 +28,19 @@ export function BusinessProfileForm({
   onboarding?: boolean;
 }) {
   const [state, action] = useActionState(saveBusinessProfileAction, initialActionState);
+  const initialCountry = (profile?.country_code ?? "OTHER") as SupportedCountry;
+  const [countryCode, setCountryCode] = useState<SupportedCountry>(initialCountry);
+  const [currency, setCurrency] = useState<SupportedCurrency>((profile?.currency ?? "USD") as SupportedCurrency);
+  const currencyOptions = useMemo(() => getCurrencyOptionsForCountry(countryCode), [countryCode]);
+
+  function changeCountry(nextCountry: SupportedCountry) {
+    setCountryCode(nextCountry);
+    const options = getCurrencyOptionsForCountry(nextCountry);
+    if (!options.some((option) => option.code === currency)) {
+      setCurrency(options[0]?.code ?? "USD");
+    }
+  }
+
   return (
     <form action={action} className="space-y-6">
       <input name="intent" type="hidden" value={onboarding ? "onboarding" : "settings"} />
@@ -48,11 +66,16 @@ export function BusinessProfileForm({
         <label className="text-sm font-medium text-slate-700">Teléfono
           <input className={input} defaultValue={profile?.phone ?? ""} inputMode="tel" name="phone" />
         </label>
-        <label className="text-sm font-medium text-slate-700">Moneda
-          <select className={input} defaultValue={profile?.currency ?? "USD"} name="currency">
-            {CURRENCY_OPTIONS.map(({ code, label }) => <option key={code} value={code}>{label}</option>)}
+        <label className="text-sm font-medium text-slate-700">País
+          <select className={input} name="countryCode" onChange={(event) => changeCountry(event.target.value as SupportedCountry)} value={countryCode}>
+            {COUNTRY_OPTIONS.map(({ code, label }) => <option key={code} value={code}>{label}</option>)}
           </select>
-          <span className="mt-1 block text-xs font-normal text-slate-500">Se aplicará a las nuevas cotizaciones; no convierte automáticamente importes existentes.</span>
+        </label>
+        <label className="text-sm font-medium text-slate-700">Moneda de trabajo
+          <select className={input} name="currency" onChange={(event) => setCurrency(event.target.value as SupportedCurrency)} value={currency}>
+            {currencyOptions.map(({ code, label }) => <option key={code} value={code}>{label}</option>)}
+          </select>
+          <span className="mt-1 block text-xs font-normal text-slate-500">Siempre puedes usar USD o EUR, además de la moneda local. Se aplica a nuevas cotizaciones y no convierte importes existentes.</span>
         </label>
         <label className="text-sm font-medium text-slate-700">Margen predeterminado (%)
           <input className={input} defaultValue={profile?.default_margin_percentage ?? 40} min="0" name="defaultMarginPercentage" step="0.01" type="number" />

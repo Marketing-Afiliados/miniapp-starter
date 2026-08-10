@@ -1,11 +1,41 @@
 import type { QuoteItemType, QuoteStatus } from "@/types/database";
 
-export const CURRENCY_OPTIONS = [
+export const SUPPORTED_CURRENCY_CODES = ["USD", "EUR", "ARS", "MXN", "CLP", "COP"] as const;
+export type SupportedCurrency = (typeof SUPPORTED_CURRENCY_CODES)[number];
+
+export const CURRENCY_OPTIONS: ReadonlyArray<{ code: SupportedCurrency; label: string }> = [
   { code: "USD", label: "USD — Dólar estadounidense" },
   { code: "EUR", label: "EUR — Euro" },
-] as const;
+  { code: "ARS", label: "ARS — Peso argentino" },
+  { code: "MXN", label: "MXN — Peso mexicano" },
+  { code: "CLP", label: "CLP — Peso chileno" },
+  { code: "COP", label: "COP — Peso colombiano" },
+];
 
-export type SupportedCurrency = (typeof CURRENCY_OPTIONS)[number]["code"];
+export const SUPPORTED_COUNTRY_CODES = ["AR", "CL", "CO", "EC", "ES", "MX", "US", "OTHER"] as const;
+export type SupportedCountry = (typeof SUPPORTED_COUNTRY_CODES)[number];
+
+export const COUNTRY_OPTIONS: ReadonlyArray<{
+  code: SupportedCountry;
+  label: string;
+  localCurrency: SupportedCurrency | null;
+}> = [
+  { code: "AR", label: "Argentina", localCurrency: "ARS" },
+  { code: "CL", label: "Chile", localCurrency: "CLP" },
+  { code: "CO", label: "Colombia", localCurrency: "COP" },
+  { code: "EC", label: "Ecuador", localCurrency: "USD" },
+  { code: "ES", label: "España", localCurrency: "EUR" },
+  { code: "US", label: "Estados Unidos", localCurrency: "USD" },
+  { code: "MX", label: "México", localCurrency: "MXN" },
+  { code: "OTHER", label: "Otro país", localCurrency: null },
+];
+
+export function getCurrencyOptionsForCountry(countryCode: string) {
+  const country = COUNTRY_OPTIONS.find((option) => option.code === countryCode);
+  const allowed = new Set<SupportedCurrency>(["USD", "EUR"]);
+  if (country?.localCurrency) allowed.add(country.localCurrency);
+  return CURRENCY_OPTIONS.filter((option) => allowed.has(option.code));
+}
 
 export const DECOQUOTE_CONFIG = {
   name: "DecoQuote",

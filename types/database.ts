@@ -102,6 +102,7 @@ export interface BusinessProfile extends Record<string, unknown> {
   instagram: string | null;
   logo_url: string | null;
   address: string | null;
+  country_code: string;
   currency: string;
   default_margin_percentage: number;
   default_terms: string | null;
