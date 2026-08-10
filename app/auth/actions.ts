@@ -7,17 +7,7 @@ import { requireUser } from "@/lib/auth/guards";
 import { ensureProfile } from "@/lib/auth/profile";
 import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
-
-export interface AuthActionState {
-  status: "idle" | "error" | "success";
-  message: string;
-  fieldErrors?: Partial<Record<"fullName" | "email" | "password" | "avatarUrl", string>>;
-}
-
-export const initialAuthState: AuthActionState = {
-  status: "idle",
-  message: "",
-};
+import type { AuthActionState } from "@/types/auth-actions";
 
 function field(formData: FormData, name: string) {
   const value = formData.get(name);

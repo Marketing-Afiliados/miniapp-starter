@@ -2,10 +2,8 @@
 
 import { useActionState } from "react";
 
-import {
-  initialAuthState,
-  updateAccountAction,
-} from "@/app/auth/actions";
+import { updateAccountAction } from "@/app/auth/actions";
+import { initialAuthState } from "@/types/auth-actions";
 
 const inputClass =
   "mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-slate-950 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 disabled:bg-slate-50 disabled:text-slate-500";
