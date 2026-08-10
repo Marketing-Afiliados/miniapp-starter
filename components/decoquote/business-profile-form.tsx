@@ -61,9 +61,26 @@ export function BusinessProfileForm({
       <label className="block text-sm font-medium text-slate-700">Dirección
         <input className={input} defaultValue={profile?.address ?? ""} name="address" />
       </label>
-      <label className="block text-sm font-medium text-slate-700">URL del logo <span className="font-normal text-slate-400">(opcional)</span>
-        <input className={input} defaultValue={profile?.logo_url ?? ""} name="logoUrl" type="url" />
-      </label>
+      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div
+            aria-label={profile?.logo_url ? "Logo actual del negocio" : "Sin logo cargado"}
+            className="flex size-20 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white bg-contain bg-center bg-no-repeat text-xs font-semibold text-slate-400"
+            role="img"
+            style={profile?.logo_url ? { backgroundImage: `url("${profile.logo_url}")` } : undefined}
+          >
+            {profile?.logo_url ? null : "Sin logo"}
+          </div>
+          <div className="min-w-0 flex-1">
+            <label className="block text-sm font-medium text-slate-700">Logo del negocio <span className="font-normal text-slate-400">(opcional)</span>
+              <input accept="image/png,image/jpeg" className={`${input} py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-1.5 file:font-semibold file:text-violet-700`} name="logoFile" type="file" />
+            </label>
+            <p className="mt-1 text-xs text-slate-500">PNG o JPG, máximo 2 MB. Se mostrará en tus propuestas PDF.</p>
+            {state.fieldErrors?.logoFile ? <span className="mt-1 block text-xs text-rose-600">{state.fieldErrors.logoFile}</span> : null}
+            {profile?.logo_url ? <label className="mt-3 flex items-center gap-2 text-xs font-medium text-slate-600"><input className="size-4 accent-violet-600" name="removeLogo" type="checkbox" />Eliminar el logo actual</label> : null}
+          </div>
+        </div>
+      </section>
       <label className="block text-sm font-medium text-slate-700">Condiciones predeterminadas
         <textarea className={`${input} min-h-28 py-3`} defaultValue={profile?.default_terms ?? "Cotización válida por 15 días. La fecha se reserva al confirmar el anticipo."} name="defaultTerms" />
       </label>

@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth/guards";
+import {
+  BUSINESS_LOGO_BUCKET,
+  createBusinessLogoPath,
+  getBusinessLogoStoragePath,
+  validateBusinessLogo,
+} from "@/lib/decoquote/logo";
 import { toCents } from "@/lib/decoquote/money";
 import {
   businessProfileSchema,
@@ -32,7 +38,6 @@ export async function saveBusinessProfileAction(
     phone: formValue(formData, "phone"),
     whatsapp: formValue(formData, "whatsapp"),
     instagram: formValue(formData, "instagram"),
-    logoUrl: formValue(formData, "logoUrl"),
     address: formValue(formData, "address"),
     currency: formValue(formData, "currency") || "USD",
     defaultMarginPercentage: formValue(formData, "defaultMarginPercentage"),
@@ -41,9 +46,37 @@ export async function saveBusinessProfileAction(
   if (!result.success) {
     return { status: "error", message: "Revisa los campos indicados.", fieldErrors: zodFieldErrors(result.error) };
   }
+  const logo = await validateBusinessLogo(formData.get("logoFile"));
+  if (logo.error) {
+    return { status: "error", message: "No pudimos procesar el logo.", fieldErrors: { logoFile: logo.error } };
+  }
 
   const data = result.data;
   const supabase = await createClient();
+  const { data: existingProfile } = await supabase
+    .from("business_profiles")
+    .select("logo_url")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const previousLogoUrl = existingProfile?.logo_url ?? null;
+  let logoUrl = checked(formData, "removeLogo") ? null : previousLogoUrl;
+  let uploadedLogoPath: string | null = null;
+
+  if (logo.file && logo.extension) {
+    uploadedLogoPath = createBusinessLogoPath(user.id, logo.extension);
+    const { error: uploadError } = await supabase.storage
+      .from(BUSINESS_LOGO_BUCKET)
+      .upload(uploadedLogoPath, logo.file, {
+        cacheControl: "3600",
+        contentType: logo.file.type,
+        upsert: false,
+      });
+    if (uploadError) {
+      return { status: "error", message: "No pudimos subir el logo. Verifica la migración de Storage e inténtalo nuevamente." };
+    }
+    logoUrl = supabase.storage.from(BUSINESS_LOGO_BUCKET).getPublicUrl(uploadedLogoPath).data.publicUrl;
+  }
+
   const { error } = await supabase.from("business_profiles").upsert(
     {
       user_id: user.id,
@@ -53,7 +86,7 @@ export async function saveBusinessProfileAction(
       phone: data.phone,
       whatsapp: data.whatsapp,
       instagram: data.instagram,
-      logo_url: data.logoUrl,
+      logo_url: logoUrl,
       address: data.address,
       currency: data.currency,
       default_margin_percentage: data.defaultMarginPercentage,
@@ -61,7 +94,15 @@ export async function saveBusinessProfileAction(
     },
     { onConflict: "user_id" },
   );
-  if (error) return { status: "error", message: "No pudimos guardar el perfil del negocio." };
+  if (error) {
+    if (uploadedLogoPath) await supabase.storage.from(BUSINESS_LOGO_BUCKET).remove([uploadedLogoPath]);
+    return { status: "error", message: "No pudimos guardar el perfil del negocio." };
+  }
+
+  const previousLogoPath = getBusinessLogoStoragePath(previousLogoUrl);
+  if (previousLogoPath && previousLogoPath !== uploadedLogoPath && (uploadedLogoPath || checked(formData, "removeLogo"))) {
+    await supabase.storage.from(BUSINESS_LOGO_BUCKET).remove([previousLogoPath]);
+  }
 
   revalidatePath("/dashboard", "layout");
   if (formValue(formData, "intent") === "onboarding") {

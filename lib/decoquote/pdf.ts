@@ -7,6 +7,10 @@ export interface QuotePdfData {
   customer: Customer;
   quote: Quote;
   items: QuoteItem[];
+  logo?: {
+    bytes: Uint8Array;
+    mimeType: "image/jpeg" | "image/png";
+  } | null;
 }
 
 const PAGE_WIDTH = 595.28;
@@ -30,7 +34,7 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
   return lines.length ? lines : [""];
 }
 
-export async function generateQuotePdf({ business, customer, quote, items }: QuotePdfData): Promise<Uint8Array> {
+export async function generateQuotePdf({ business, customer, quote, items, logo }: QuotePdfData): Promise<Uint8Array> {
   const document = await PDFDocument.create();
   const regular = await document.embedFont(StandardFonts.Helvetica);
   const bold = await document.embedFont(StandardFonts.HelveticaBold);
@@ -53,8 +57,28 @@ export async function generateQuotePdf({ business, customer, quote, items }: Quo
   };
 
   page.drawRectangle({ x: 0, y: PAGE_HEIGHT - 150, width: PAGE_WIDTH, height: 150, color: rgb(0.95, 0.93, 1) });
-  page.drawRectangle({ x: MARGIN, y: PAGE_HEIGHT - 92, width: 42, height: 42, color: rgb(0.48, 0.27, 0.93) });
-  page.drawText("DQ", { x: MARGIN + 11, y: PAGE_HEIGHT - 77, size: 12, font: bold, color: rgb(1, 1, 1) });
+  if (logo) {
+    try {
+      const image = logo.mimeType === "image/png"
+        ? await document.embedPng(logo.bytes)
+        : await document.embedJpg(logo.bytes);
+      const scale = Math.min(42 / image.width, 42 / image.height);
+      const width = image.width * scale;
+      const height = image.height * scale;
+      page.drawImage(image, {
+        x: MARGIN + (42 - width) / 2,
+        y: PAGE_HEIGHT - 92 + (42 - height) / 2,
+        width,
+        height,
+      });
+    } catch {
+      page.drawRectangle({ x: MARGIN, y: PAGE_HEIGHT - 92, width: 42, height: 42, color: rgb(0.48, 0.27, 0.93) });
+      page.drawText("DQ", { x: MARGIN + 11, y: PAGE_HEIGHT - 77, size: 12, font: bold, color: rgb(1, 1, 1) });
+    }
+  } else {
+    page.drawRectangle({ x: MARGIN, y: PAGE_HEIGHT - 92, width: 42, height: 42, color: rgb(0.48, 0.27, 0.93) });
+    page.drawText("DQ", { x: MARGIN + 11, y: PAGE_HEIGHT - 77, size: 12, font: bold, color: rgb(1, 1, 1) });
+  }
   y = PAGE_HEIGHT - 66;
   text(business.business_name, 104, 17, bold, rgb(0.09, 0.1, 0.18));
   y -= 23;

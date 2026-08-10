@@ -19,6 +19,7 @@ La autenticación, billing, planes, usage, webhooks y panel admin del Starter se
 
 - Dashboard con cotizaciones del mes, valor cotizado, ganancia, clientes y actividad reciente.
 - Perfil del negocio y onboarding inicial.
+- Logo del negocio en Supabase Storage, visible en las propuestas PDF.
 - Clientes con búsqueda, edición y archivado lógico.
 - Servicios y materiales reutilizables.
 - Creador de cotizaciones con líneas dinámicas y conceptos personalizados.
@@ -116,18 +117,19 @@ Los tests obligatorios cubren markup del 40%, margen fijo, pérdida y cantidad p
 | `SUPABASE_SERVICE_ROLE_KEY` | Secreta | Webhook y conciliación confiable. |
 | `HOTMART_HOTTOK` | Secreta | Autenticación de Webhook 2.0. |
 | `HOTMART_DEFAULT_PLAN_CODE` | Privada/opcional | Fallback; recomendado `decoquote-pro`. |
-| `DECOQUOTE_DEV_ACCESS` | Privada/opcional | Bypass solo para local/Preview QA. |
+| `DECOQUOTE_DEV_ACCESS` | Privada/opcional | Bypass temporal para QA sin suscripción. |
 
-No subas `.env.local`. Nunca habilites `DECOQUOTE_DEV_ACCESS=true` para usuarios normales en Production. Los administradores mantienen acceso de prueba para configurar el producto inicial.
+No subas `.env.local`. Para una prueba temporal en Vercel Production puedes usar `DECOQUOTE_DEV_ACCESS=true`, desplegar y retirarla al terminar. Nunca la dejes habilitada cuando entren usuarios normales.
 
 ## Supabase
 
 ### Aplicar migraciones
 
-En un proyecto ya configurado, aplica solamente la nueva migración después de las tres existentes:
+En un proyecto ya configurado, aplica las migraciones DecoQuote en orden:
 
 ```text
 supabase/migrations/202608090004_decoquote.sql
+supabase/migrations/202608100001_business_logo_storage.sql
 ```
 
 Con Supabase CLI:
@@ -139,7 +141,7 @@ supabase db push
 
 O copia el contenido completo en Supabase Dashboard → SQL Editor → New query → Run.
 
-La migración es incremental: no contiene `DROP TABLE`, no borra Auth ni las tablas del Starter. También crea o actualiza el plan:
+Las migraciones son incrementales: no contienen `DROP TABLE`, no borran Auth ni las tablas del Starter. La segunda crea el bucket público `business-logos`, limita archivos a PNG/JPG de 2 MB y protege escritura/eliminación por propietario mediante RLS. La primera también crea o actualiza el plan:
 
 ```text
 code: decoquote-pro
@@ -200,8 +202,9 @@ Incluye negocio, cliente, evento, conceptos, cantidad, precio, total y condicion
 5. Install Command: automático o `pnpm install`.
 6. Output Directory: **sin Override**; debe mostrar `Next.js default`.
 7. Configura las variables anteriores para Production y las públicas necesarias para Preview.
-8. No actives `DECOQUOTE_DEV_ACCESS` en Production.
-9. Despliega y actualiza Site URL/Redirect URLs en Supabase si cambia el dominio.
+8. Para QA sin Hotmart, configura temporalmente `DECOQUOTE_DEV_ACCESS=true`, vuelve a desplegar y prueba cotizaciones/PDF.
+9. Retira `DECOQUOTE_DEV_ACCESS` y vuelve a desplegar antes de abrir el producto a usuarios.
+10. Actualiza Site URL/Redirect URLs en Supabase si cambia el dominio.
 
 ## Rutas principales
 

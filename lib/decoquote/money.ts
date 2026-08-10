@@ -5,6 +5,12 @@ export function toCents(value: string | number): number {
   return Math.round(amount * 100);
 }
 
+export function toDecimal(value: string | number): number {
+  const normalized = typeof value === "string" ? value.replace(",", ".").trim() : value;
+  const amount = Number(normalized);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
 export function fromCents(cents: number): number {
   return cents / 100;
 }

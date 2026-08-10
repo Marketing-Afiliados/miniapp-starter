@@ -16,7 +16,12 @@ export async function saveQuoteAction(_state: ActionState, formData: FormData): 
   const quoteId = typeof quoteIdValue === "string" && quoteIdValue ? quoteIdValue : null;
   if (!quoteId) {
     const access = await canUseDecoQuoteFeature(user.id, "quotes");
-    if (!access.allowed) return { status: "error", message: "Alcanzaste el límite mensual de cotizaciones de tu plan." };
+    if (!access.allowed) {
+      const message = access.reason === "no_subscription"
+        ? "Tu cuenta todavía no tiene una suscripción activa."
+        : "Alcanzaste el límite mensual de cotizaciones de tu plan.";
+      return { status: "error", message };
+    }
   }
   const raw = formData.get("payload");
   let parsed: unknown;

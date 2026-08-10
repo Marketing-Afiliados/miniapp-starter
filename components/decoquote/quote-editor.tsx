@@ -5,7 +5,7 @@ import { saveQuoteAction } from "@/app/dashboard/quotes/actions";
 import { FormFeedback } from "@/components/decoquote/form-feedback";
 import { SubmitButton } from "@/components/decoquote/submit-button";
 import { calculateQuote } from "@/lib/decoquote/calculations";
-import { centsToInput, formatCurrency, toCents } from "@/lib/decoquote/money";
+import { centsToInput, formatCurrency, toCents, toDecimal } from "@/lib/decoquote/money";
 import { initialActionState } from "@/types/action-state";
 import type { Customer, Material, Service } from "@/types/database";
 import type { QuoteEditorItem, QuoteEditorPayload } from "@/types/decoquote";
@@ -15,7 +15,7 @@ const card = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
 const newId = () => typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now() + Math.random());
 
 function emptyItem(): QuoteEditorItem {
-  return { id: newId(), itemType: "custom", referenceId: null, name: "", description: "", quantity: 1, unit: "unidad", unitCostCents: 0, unitPriceCents: 0 };
+  return { id: newId(), itemType: "custom", referenceId: null, name: "", description: "", quantity: 0, unit: "unidad", unitCostCents: 0, unitPriceCents: 0 };
 }
 
 export function QuoteEditor({
@@ -82,6 +82,11 @@ export function QuoteEditor({
     setCatalog("");
   }
 
+  function changeMarginType(nextType: "percentage" | "fixed") {
+    setMarginType(nextType);
+    setMarginValue(nextType === "percentage" ? defaultMargin : 0);
+  }
+
   return (
     <form action={action}>
       {quoteId ? <input name="quoteId" type="hidden" value={quoteId} /> : null}
@@ -129,10 +134,10 @@ export function QuoteEditor({
                   <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-wide text-violet-600">Concepto {index + 1}</p><button className="text-xs font-semibold text-rose-600" disabled={items.length === 1} onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))} type="button">Quitar</button></div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
                     <label className="text-xs font-medium text-slate-600 sm:col-span-2 lg:col-span-3">Nombre<input className={input} onChange={(e) => updateItem(item.id, { name: e.target.value })} required value={item.name} /></label>
-                    <label className="text-xs font-medium text-slate-600">Cantidad<input className={input} min="0" onChange={(e) => updateItem(item.id, { quantity: Number(e.target.value) })} step="0.001" type="number" value={item.quantity} /></label>
+                    <label className="text-xs font-medium text-slate-600">Cantidad<input className={input} defaultValue={item.quantity || ""} inputMode="decimal" onChange={(e) => updateItem(item.id, { quantity: toDecimal(e.target.value) })} placeholder="1" type="text" /></label>
                     <label className="text-xs font-medium text-slate-600 lg:col-span-2">Unidad<input className={input} onChange={(e) => updateItem(item.id, { unit: e.target.value })} value={item.unit} /></label>
-                    <label className="text-xs font-medium text-slate-600 lg:col-span-2">Costo unitario<input className={input} min="0" onChange={(e) => updateItem(item.id, { unitCostCents: toCents(e.target.value) })} step="0.01" type="number" value={centsToInput(item.unitCostCents)} /></label>
-                    <label className="text-xs font-medium text-slate-600 lg:col-span-2">Precio unitario<input className={input} min="0" onChange={(e) => updateItem(item.id, { unitPriceCents: toCents(e.target.value) })} step="0.01" type="number" value={centsToInput(item.unitPriceCents)} /></label>
+                    <label className="text-xs font-medium text-slate-600 lg:col-span-2">Costo unitario<input className={input} defaultValue={item.unitCostCents ? centsToInput(item.unitCostCents) : ""} inputMode="decimal" onChange={(e) => updateItem(item.id, { unitCostCents: toCents(e.target.value) })} placeholder="0.00" type="text" /></label>
+                    <label className="text-xs font-medium text-slate-600 lg:col-span-2">Precio unitario<input className={input} defaultValue={item.unitPriceCents ? centsToInput(item.unitPriceCents) : ""} inputMode="decimal" onChange={(e) => updateItem(item.id, { unitPriceCents: toCents(e.target.value) })} placeholder="0.00" type="text" /></label>
                     <div className="flex items-end text-sm font-semibold text-slate-700 lg:col-span-2">Total: {formatCurrency(Math.round(item.quantity * item.unitPriceCents), currency)}</div>
                   </div>
                 </article>
@@ -145,7 +150,7 @@ export function QuoteEditor({
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               {[["Mano de obra", laborCostCents, setLabor], ["Transporte", transportCostCents, setTransport], ["Otros gastos", otherCostCents, setOther]].map(([label, value, setter]) => (
                 <label className="text-sm font-medium text-slate-700" key={String(label)}>{String(label)}
-                  <input className={input} min="0" onChange={(e) => (setter as (value: number) => void)(toCents(e.target.value))} step="0.01" type="number" value={centsToInput(value as number)} />
+                  <input className={input} defaultValue={(value as number) ? centsToInput(value as number) : ""} inputMode="decimal" onChange={(e) => (setter as (value: number) => void)(toCents(e.target.value))} placeholder="0.00" type="text" />
                 </label>
               ))}
             </div>
@@ -154,9 +159,9 @@ export function QuoteEditor({
           <section className={card}>
             <h2 className="text-lg font-semibold">5. Margen y precio final</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">Tipo de margen<select className={input} onChange={(e) => setMarginType(e.target.value as "percentage" | "fixed")} value={marginType}><option value="percentage">Porcentaje sobre costo (markup)</option><option value="fixed">Monto fijo</option></select></label>
-              <label className="text-sm font-medium text-slate-700">{marginType === "percentage" ? "Porcentaje (%)" : `Margen fijo (${currency})`}<input className={input} min="0" onChange={(e) => setMarginValue(marginType === "percentage" ? Number(e.target.value) : toCents(e.target.value))} step="0.01" type="number" value={marginType === "percentage" ? marginValue : centsToInput(marginValue)} /></label>
-              <label className="text-sm font-medium text-slate-700 sm:col-span-2">Precio final manual <span className="font-normal text-slate-400">(opcional)</span><input className={input} min="0" onChange={(e) => setFinalPrice(e.target.value ? toCents(e.target.value) : null)} placeholder={centsToInput(calculation.recommendedPriceCents)} step="0.01" type="number" value={finalPriceCents === null ? "" : centsToInput(finalPriceCents)} /></label>
+              <label className="text-sm font-medium text-slate-700">Tipo de margen<select className={input} onChange={(e) => changeMarginType(e.target.value as "percentage" | "fixed")} value={marginType}><option value="percentage">Porcentaje sobre costo (markup)</option><option value="fixed">Monto fijo</option></select></label>
+              <label className="text-sm font-medium text-slate-700">{marginType === "percentage" ? "Porcentaje (%)" : `Margen fijo (${currency})`}<input className={input} defaultValue={marginValue ? (marginType === "percentage" ? marginValue : centsToInput(marginValue)) : ""} inputMode="decimal" key={marginType} onChange={(e) => setMarginValue(marginType === "percentage" ? toDecimal(e.target.value) : toCents(e.target.value))} placeholder="0.00" type="text" /></label>
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">Precio final manual <span className="font-normal text-slate-400">(opcional)</span><input className={input} defaultValue={finalPriceCents === null ? "" : centsToInput(finalPriceCents)} inputMode="decimal" onChange={(e) => setFinalPrice(e.target.value.trim() ? toCents(e.target.value) : null)} placeholder={centsToInput(calculation.recommendedPriceCents)} type="text" /></label>
             </div>
             {calculation.hasLoss ? <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-800">Este precio genera una pérdida estimada de {formatCurrency(calculation.lossAmountCents, currency)}.</p> : null}
           </section>

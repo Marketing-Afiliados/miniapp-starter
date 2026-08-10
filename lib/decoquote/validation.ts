@@ -19,7 +19,6 @@ export const businessProfileSchema = z.object({
   phone: optionalText(30),
   whatsapp: z.string().trim().min(7, "Ingresa un WhatsApp válido.").max(30),
   instagram: optionalText(80),
-  logoUrl: optionalText(500),
   address: optionalText(300),
   currency: z.enum(supportedCurrencies, { message: "Selecciona dólares o euros." }),
   defaultMarginPercentage: money.max(1000, "Revisa el porcentaje."),
