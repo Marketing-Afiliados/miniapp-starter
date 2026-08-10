@@ -5,8 +5,13 @@ import { usePathname } from "next/navigation";
 
 const userItems = [
   { href: "/dashboard", label: "Dashboard", icon: "⌂" },
-  { href: "/dashboard/account", label: "Mi cuenta", icon: "○" },
-  { href: "/dashboard/plan", label: "Plan", icon: "◇" },
+  { href: "/dashboard/quotes", label: "Cotizaciones", icon: "▤" },
+  { href: "/dashboard/customers", label: "Clientes", icon: "○" },
+  { href: "/dashboard/services", label: "Servicios", icon: "◇" },
+  { href: "/dashboard/materials", label: "Materiales", icon: "▦" },
+  { href: "/dashboard/profitability", label: "Rentabilidad", icon: "↗" },
+  { href: "/dashboard/plan", label: "Mi plan", icon: "☆" },
+  { href: "/dashboard/account", label: "Mi cuenta", icon: "◎" },
 ];
 
 const adminItems = [
@@ -30,7 +35,7 @@ export function DashboardNavigation({
   return (
     <nav className="flex gap-1 overflow-x-auto lg:flex-col" aria-label={admin ? "Administración" : "Cuenta"}>
       {items.map((item) => {
-        const active = item.href === pathname;
+        const active = item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}

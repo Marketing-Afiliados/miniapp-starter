@@ -1,141 +1,37 @@
 import Link from "next/link";
-
 import { Brand } from "@/components/ui/brand";
+import { DECOQUOTE_CONFIG } from "@/lib/decoquote/constants";
 
-export default function Home() {
+const features = [
+  ["Costos reales", "Suma materiales, servicios, mano de obra, transporte y otros gastos."],
+  ["Margen protegido", "Aplica markup o monto fijo y conoce tu ganancia antes de enviar."],
+  ["PDF profesional", "Presenta al cliente precios y condiciones sin exponer costos internos."],
+  ["Catálogos reutilizables", "Guarda clientes, servicios y materiales para cotizar más rápido."],
+  ["Historial completo", "Edita, duplica y consulta cotizaciones sin volver a empezar."],
+  ["Rentabilidad", "Visualiza ingresos, costos y ganancia estimada por período."],
+];
+
+export default function HomePage() {
   return (
-    <main className="overflow-hidden bg-white">
-      <header className="relative z-20 border-b border-slate-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-          <Brand />
-          <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex" aria-label="Navegación principal">
-            <a className="transition hover:text-slate-950" href="#como-funciona">Cómo funciona</a>
-            <a className="transition hover:text-slate-950" href="#precio">Precio</a>
-          </nav>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link className="hidden rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:block" href="/login">
-              Iniciar sesión
-            </Link>
-            <Link className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-700" href="/register">
-              Crear cuenta
-            </Link>
-          </div>
-        </div>
-      </header>
+    <main className="overflow-hidden bg-[#fcfbff] text-slate-950">
+      <header className="border-b border-violet-100 bg-white/90 backdrop-blur"><div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 sm:px-8"><Brand /><nav className="hidden gap-7 text-sm font-medium text-slate-600 md:flex"><a href="#como-funciona">Cómo funciona</a><a href="#beneficios">Beneficios</a><a href="#precio">Precio</a><a href="#faq">FAQ</a></nav><div className="flex items-center gap-2"><Link className="hidden rounded-xl px-4 py-2.5 text-sm font-semibold sm:inline-flex" href="/login">Iniciar sesión</Link><Link className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white" href="/register">Crear cuenta</Link></div></div></header>
 
-      <section className="relative isolate">
-        <div className="absolute inset-x-0 top-0 -z-10 h-[720px] bg-[radial-gradient(circle_at_72%_18%,#e0e7ff_0,transparent_34%),radial-gradient(circle_at_18%_8%,#ecfeff_0,transparent_27%)]" />
-        <div className="mx-auto grid max-w-7xl items-center gap-16 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[1.05fr_.95fr] lg:py-32">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-700">
-              <span className="size-1.5 rounded-full bg-indigo-500" />
-              De idea a SaaS, sin reconstruir lo básico
-            </span>
-            <h1 className="mt-7 max-w-3xl text-5xl font-semibold leading-[1.02] tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-7xl">
-              Tu próxima Mini App empieza más adelante.
-            </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
-              Una base profesional para lanzar productos por suscripción con usuarios, planes, seguridad y operaciones listas desde el primer día.
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link className="inline-flex h-13 items-center justify-center rounded-xl bg-indigo-600 px-6 font-semibold text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:bg-indigo-700" href="/register">
-                Crear mi cuenta
-              </Link>
-              <Link className="inline-flex h-13 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50" href="/login">
-                Ya tengo una cuenta
-              </Link>
-            </div>
-            <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-sm text-slate-600">
-              {["Autenticación segura", "Control de acceso", "Billing preparado"].map((item) => (
-                <span key={item} className="flex items-center gap-2">
-                  <span className="grid size-5 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">✓</span>
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
+      <section className="relative px-5 py-16 sm:px-8 sm:py-24"><div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,#ede9fe_0,transparent_38%),radial-gradient(circle_at_10%_60%,#f5f3ff_0,transparent_35%)]" /><div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_.95fr]"><div><span className="inline-flex rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700">Hecho para decoradoras de eventos</span><h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.045em] sm:text-6xl">Cotiza tus decoraciones sin improvisar tus precios.</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">Calcula materiales, mano de obra, transporte, margen y ganancia en minutos.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link className="inline-flex min-h-12 items-center justify-center rounded-xl bg-violet-600 px-6 font-semibold text-white shadow-lg shadow-violet-200" href="/register">Crear mi primera cotización</Link><Link className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 font-semibold" href="/login">Iniciar sesión</Link></div><div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500"><span>✓ Cálculos consistentes</span><span>✓ Datos protegidos</span><span>✓ Listo para móvil</span></div></div>
+        <div className="relative"><div className="absolute -inset-8 rounded-full bg-violet-200/50 blur-3xl" /><div className="relative rounded-[28px] border border-white bg-white p-4 shadow-2xl shadow-violet-200/60"><div className="rounded-2xl bg-slate-950 p-5 text-white"><div className="flex items-center justify-between"><div><p className="text-xs uppercase tracking-widest text-violet-300">Cotización</p><p className="mt-1 font-semibold">Cumpleaños Isabella</p></div><span className="rounded-full bg-emerald-400/15 px-3 py-1 text-xs text-emerald-300">Borrador</span></div><div className="mt-6 space-y-3 rounded-xl bg-white/5 p-4 text-sm">{[["Arco orgánico","$130.00"],["Panel personalizado","$120.00"],["Globos y montaje","$95.00"]].map(([name, price]) => <div className="flex justify-between" key={name}><span className="text-slate-300">{name}</span><span>{price}</span></div>)}</div><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-white/5 p-4"><p className="text-xs text-slate-400">Costo total</p><p className="mt-1 text-lg font-semibold">$265.00</p></div><div className="rounded-xl bg-emerald-400/10 p-4"><p className="text-xs text-emerald-300">Ganancia</p><p className="mt-1 text-lg font-semibold text-emerald-300">$106.00</p></div></div><div className="mt-3 rounded-xl bg-violet-500 p-4"><p className="text-xs uppercase tracking-wide text-violet-100">Precio recomendado</p><p className="mt-1 text-3xl font-semibold">$371.00</p></div></div></div></div>
+      </div></section>
 
-          <div className="relative mx-auto w-full max-w-xl">
-            <div className="absolute -inset-8 -z-10 rounded-[3rem] bg-gradient-to-br from-indigo-100/70 to-cyan-50 blur-2xl" />
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/50">
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <div className="flex gap-1.5"><span className="size-2.5 rounded-full bg-rose-300" /><span className="size-2.5 rounded-full bg-amber-300" /><span className="size-2.5 rounded-full bg-emerald-300" /></div>
-                <span className="text-xs font-medium text-slate-400">Panel de producto</span>
-              </div>
-              <div className="grid min-h-[420px] grid-cols-[112px_1fr] sm:grid-cols-[150px_1fr]">
-                <div className="border-r border-slate-100 bg-slate-50 p-4">
-                  <div className="mb-7 h-7 w-7 rounded-lg bg-indigo-600" />
-                  <div className="space-y-3">
-                    <div className="h-8 rounded-lg bg-indigo-100" />
-                    <div className="h-8 rounded-lg bg-white" />
-                    <div className="h-8 rounded-lg bg-white" />
-                  </div>
-                </div>
-                <div className="p-5 sm:p-7">
-                  <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Resumen</p>
-                  <h2 className="mt-2 text-xl font-semibold text-slate-900">Buenos días, Andrea</h2>
-                  <div className="mt-7 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><p className="text-xs text-slate-500">Plan actual</p><p className="mt-2 font-semibold text-slate-900">Pro</p></div>
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><p className="text-xs text-slate-500">Estado</p><p className="mt-2 font-semibold text-emerald-600">Activo</p></div>
-                  </div>
-                  <div className="mt-5 rounded-2xl bg-slate-950 p-5 text-white">
-                    <p className="text-xs text-slate-400">Uso del período</p>
-                    <div className="mt-3 flex items-end justify-between"><span className="text-2xl font-semibold">14 / 20</span><span className="text-xs text-slate-400">70%</span></div>
-                    <div className="mt-4 h-2 rounded-full bg-white/10"><div className="h-2 w-[70%] rounded-full bg-indigo-400" /></div>
-                  </div>
-                  <div className="mt-5 space-y-3">{[72, 86, 56].map((width) => <div key={width} className="h-3 rounded-full bg-slate-100" style={{ width: `${width}%` }} />)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <section className="bg-slate-950 px-5 py-16 text-white sm:px-8"><div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2"><div><p className="text-sm font-semibold text-violet-300">EL PROBLEMA</p><h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Deja de adivinar cuánto cobrar.</h2></div><div className="space-y-4 text-lg leading-8 text-slate-300"><p>WhatsApp, Excel, calculadora y notas hacen fácil olvidar un costo o cobrar sin conocer la ganancia.</p><p>DecoQuote reúne el cálculo y la propuesta en un solo flujo pensado para eventos.</p></div></div></section>
 
-      <section id="como-funciona" className="border-y border-slate-100 bg-slate-50 py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold text-indigo-600">Cómo funciona</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Del clon al primer cliente en tres pasos.</h2>
-          </div>
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {[
-              ["01", "Adapta tu producto", "Cambia la marca, define tu función principal y conserva una arquitectura que ya está ordenada."],
-              ["02", "Configura tu negocio", "Conecta Supabase, crea tus planes y asigna la oferta de Hotmart correspondiente."],
-              ["03", "Publica y aprende", "Despliega en Vercel, incorpora usuarios reales y evoluciona con una base preparada para crecer."],
-            ].map(([number, title, copy]) => (
-              <article key={number} className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-                <span className="text-sm font-bold text-indigo-600">{number}</span>
-                <h3 className="mt-8 text-xl font-semibold text-slate-950">{title}</h3>
-                <p className="mt-3 leading-7 text-slate-600">{copy}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <section className="px-5 py-20 sm:px-8" id="como-funciona"><div className="mx-auto max-w-7xl"><p className="text-sm font-semibold text-violet-600">CÓMO FUNCIONA</p><h2 className="mt-3 max-w-2xl text-3xl font-semibold sm:text-4xl">De la idea al precio recomendado en tres pasos.</h2><div className="mt-10 grid gap-5 md:grid-cols-3">{[["01","Registra el evento","Selecciona el cliente e ingresa fecha, tipo y lugar."],["02","Suma cada costo","Agrega conceptos, mano de obra, transporte y otros gastos."],["03","Protege tu ganancia","Aplica el margen, ajusta el precio y descarga el PDF."]].map(([n,t,d]) => <article className="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm" key={n}><span className="text-3xl font-semibold text-violet-300">{n}</span><h3 className="mt-6 text-xl font-semibold">{t}</h3><p className="mt-3 leading-7 text-slate-600">{d}</p></article>)}</div></div></section>
 
-      <section id="precio" className="py-24 sm:py-28">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8">
-          <div className="rounded-[2rem] bg-slate-950 px-6 py-12 text-white sm:px-12 lg:flex lg:items-center lg:justify-between lg:px-16">
-            <div className="max-w-2xl">
-              <span className="text-sm font-semibold text-indigo-300">Un plan simple para empezar</span>
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Todo lo esencial para validar tu Mini App.</h2>
-              <p className="mt-4 leading-7 text-slate-300">El precio y los límites finales se configuran para cada producto. La arquitectura admite varios planes cuando los necesites.</p>
-            </div>
-            <div className="mt-8 lg:ml-12 lg:mt-0 lg:text-right">
-              <p className="text-sm text-slate-400">Precio de lanzamiento</p>
-              <p className="mt-1 text-4xl font-semibold">Próximamente</p>
-              <Link className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 font-semibold text-slate-950 transition hover:bg-indigo-50" href="/register">Crear cuenta</Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <section className="bg-violet-50/60 px-5 py-20 sm:px-8" id="beneficios"><div className="mx-auto max-w-7xl"><p className="text-sm font-semibold text-violet-600">TODO LO ESENCIAL</p><h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Conoce el costo real de cada evento.</h2><p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">Protege tu ganancia antes de enviar una cotización. Crea propuestas profesionales en minutos.</p><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{features.map(([title,description], index) => <article className="rounded-2xl border border-violet-100 bg-white p-6" key={title}><span className="grid size-10 place-items-center rounded-xl bg-violet-100 font-semibold text-violet-700">{index + 1}</span><h3 className="mt-5 font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{description}</p></article>)}</div></div></section>
 
-      <footer className="border-t border-slate-100 bg-slate-50">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <Brand />
-          <p>Una base reutilizable para productos pequeños con ambición.</p>
-        </div>
-      </footer>
+      <section className="px-5 py-20 sm:px-8" id="precio"><div className="mx-auto max-w-4xl text-center"><p className="text-sm font-semibold text-violet-600">PRECIO SIMPLE</p><h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Un plan para cotizar con confianza.</h2><article className="mx-auto mt-10 max-w-md rounded-3xl border border-violet-200 bg-white p-8 text-left shadow-xl shadow-violet-100"><p className="font-semibold text-violet-700">{DECOQUOTE_CONFIG.plan.name}</p><p className="mt-4 text-5xl font-semibold">${DECOQUOTE_CONFIG.plan.price}<span className="text-base font-normal text-slate-500"> / mes</span></p><ul className="mt-7 space-y-3 text-sm text-slate-700"><li>✓ 50 cotizaciones al mes</li><li>✓ 50 PDFs al mes</li><li>✓ Clientes ilimitados</li><li>✓ Historial y rentabilidad</li></ul><Link className="mt-8 flex min-h-12 items-center justify-center rounded-xl bg-violet-600 font-semibold text-white" href="/register">Comenzar con DecoQuote</Link><p className="mt-4 text-center text-xs text-slate-400">Precio sujeto a la configuración final en Hotmart.</p></article></div></section>
+
+      <section className="bg-white px-5 py-20 sm:px-8" id="faq"><div className="mx-auto max-w-3xl"><h2 className="text-3xl font-semibold">Preguntas frecuentes</h2><div className="mt-8 divide-y divide-slate-200">{[["¿Necesito crear un catálogo completo?","No. Puedes agregar conceptos personalizados directamente en la cotización."],["¿El cliente verá mis costos?","No. El PDF nunca muestra costos internos, margen ni ganancia."],["¿Funciona desde el teléfono?","Sí. El flujo está diseñado mobile-first."],["¿Reemplaza mi contabilidad?","No. La rentabilidad es una estimación basada en cotizaciones."]].map(([q,a]) => <details className="py-5" key={q}><summary className="flex cursor-pointer list-none justify-between font-semibold">{q}<span className="text-violet-600">+</span></summary><p className="mt-3 leading-7 text-slate-600">{a}</p></details>)}</div></div></section>
+
+      <section className="px-5 py-16 sm:px-8"><div className="mx-auto max-w-6xl rounded-3xl bg-slate-950 px-6 py-12 text-center text-white"><h2 className="text-3xl font-semibold sm:text-4xl">Cotiza con claridad. Decide con números.</h2><p className="mx-auto mt-4 max-w-2xl text-slate-300">{DECOQUOTE_CONFIG.tagline}</p><Link className="mt-8 inline-flex min-h-12 items-center rounded-xl bg-violet-500 px-6 font-semibold" href="/register">Crear mi cuenta</Link></div></section>
+      <footer className="border-t border-slate-200 bg-white px-5 py-8"><div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between"><Brand /><p>© 2026 Magics DecoQuote. Hecho para negocios creativos.</p></div></footer>
     </main>
   );
 }

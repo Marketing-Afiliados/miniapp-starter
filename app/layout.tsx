@@ -6,23 +6,23 @@ import { getSiteUrl } from "@/lib/site-url";
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "MiniApp Starter — Lanza productos SaaS más rápido",
-    template: "%s | MiniApp Starter",
+    default: "DecoQuote — Cotizaciones para decoradoras",
+    template: "%s | DecoQuote",
   },
   description:
-    "Starter profesional con autenticación, suscripciones y panel administrativo para crear Mini Apps comerciales.",
+    "Calcula costos, margen y ganancia. Crea cotizaciones profesionales para tus eventos en minutos.",
   openGraph: {
     type: "website",
     locale: "es_EC",
-    title: "MiniApp Starter",
-    description: "Tu próxima Mini App empieza más adelante.",
-    images: [{ url: "/og.png", width: 1792, height: 1024, alt: "MiniApp Starter" }],
+    title: "DecoQuote | Cotiza tus decoraciones sin improvisar tus precios",
+    description: "Calcula materiales, mano de obra, transporte, margen y ganancia en minutos.",
+    images: [{ url: "/og-decoquote.png", width: 1792, height: 1024, alt: "DecoQuote para decoradoras" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MiniApp Starter",
-    description: "Tu próxima Mini App empieza más adelante.",
-    images: ["/og.png"],
+    title: "DecoQuote | Cotizaciones para decoradoras",
+    description: "Cotiza con confianza y conoce cuánto realmente ganas.",
+    images: ["/og-decoquote.png"],
   },
 };
 

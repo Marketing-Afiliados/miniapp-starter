@@ -7,11 +7,13 @@ import { createClient } from "@/lib/supabase/server";
 export default async function AdminPage() {
   await requireAdmin();
   const supabase = await createClient();
-  const [users, subscriptions, usage, webhooks] = await Promise.all([
+  const [users, subscriptions, usage, webhooks, businesses, quotes] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("subscriptions").select("*", { count: "exact", head: true }),
     supabase.from("usage").select("*", { count: "exact", head: true }),
     supabase.from("webhook_events").select("*", { count: "exact", head: true }),
+    supabase.from("business_profiles").select("*", { count: "exact", head: true }),
+    supabase.from("quotes").select("*", { count: "exact", head: true }),
   ]);
 
   const cards = [
@@ -19,12 +21,14 @@ export default async function AdminPage() {
     { label: "Suscripciones", value: subscriptions.count ?? 0, href: "/admin/subscriptions", accent: "bg-emerald-500" },
     { label: "Registros de uso", value: usage.count ?? 0, href: "/admin/usage", accent: "bg-amber-500" },
     { label: "Webhooks", value: webhooks.count ?? 0, href: "/admin/webhooks", accent: "bg-cyan-500" },
+    { label: "Negocios DecoQuote", value: businesses.count ?? 0, href: "/admin", accent: "bg-violet-500" },
+    { label: "Cotizaciones", value: quotes.count ?? 0, href: "/admin", accent: "bg-fuchsia-500" },
   ];
 
   return (
     <div>
       <PageHeader eyebrow="Administración" title="Resumen operativo" description="Supervisa usuarios, suscripciones, consumo y eventos de facturación." />
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
           <Link key={card.href} href={card.href} className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
             <span className={`block size-2.5 rounded-full ${card.accent}`} />

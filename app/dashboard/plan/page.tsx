@@ -1,55 +1,35 @@
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { requireUser } from "@/lib/auth/guards";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { DECOQUOTE_CONFIG } from "@/lib/decoquote/constants";
+import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PlanPage() {
   const { user } = await requireUser();
   const supabase = await createClient();
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: subscription }, { data: usage }] = await Promise.all([
+    supabase.from("subscriptions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("usage").select("*").eq("user_id", user.id).order("period_start", { ascending: false }),
+  ]);
   const { data: plan } = subscription
     ? await supabase.from("plans").select("*").eq("id", subscription.plan_id).maybeSingle()
-    : { data: null };
-
+    : await supabase.from("plans").select("*").eq("code", DECOQUOTE_CONFIG.plan.code).maybeSingle();
+  const monthStart = new Date();
+  monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
+  const currentUsage = (usage ?? []).filter((record) => new Date(record.period_start) >= monthStart);
+  const used = (feature: string) => currentUsage.filter((record) => record.feature === feature).reduce((sum, record) => sum + record.quantity, 0);
   return (
     <div>
-      <PageHeader title="Plan" description="Consulta tu plan, estado comercial y límites disponibles." />
-      <section className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_.8fr]">
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Plan actual</p>
-              <h2 className="mt-2 text-3xl font-semibold text-slate-950">{plan?.name ?? "Sin plan asignado"}</h2>
-              <p className="mt-3 max-w-xl leading-7 text-slate-600">{plan?.description ?? "Tu cuenta aún no tiene una suscripción vinculada."}</p>
-            </div>
-            <StatusBadge status={subscription?.status ?? "pending"} />
-          </div>
-          {plan ? (
-            <div className="mt-8 rounded-2xl bg-slate-950 p-6 text-white">
-              <p className="text-sm text-slate-400">Precio</p>
-              <p className="mt-2 text-3xl font-semibold">{formatCurrency(plan.price, plan.currency)} <span className="text-base font-normal text-slate-400">/ {plan.billing_interval}</span></p>
-            </div>
-          ) : null}
+      <PageHeader eyebrow="Suscripción" title="Mi plan" description="Consulta tu acceso, renovación y uso mensual de DecoQuote." />
+      <section className="mt-8 grid gap-5 lg:grid-cols-[1fr_360px]">
+        <article className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-6 shadow-sm sm:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-sm font-semibold text-violet-600">Plan actual</p><h2 className="mt-2 text-3xl font-semibold">{plan?.name ?? DECOQUOTE_CONFIG.plan.name}</h2><p className="mt-2 text-slate-600">{plan?.description ?? "Cotizaciones profesionales y control de rentabilidad."}</p></div><StatusBadge status={subscription?.status ?? "pending"} /></div>
+          <p className="mt-8 text-4xl font-semibold">${Number(plan?.price ?? DECOQUOTE_CONFIG.plan.price).toFixed(2)} <span className="text-base font-normal text-slate-500">/ mes</span></p>
+          <p className="mt-5 text-sm text-slate-600">Próxima renovación: <strong>{formatDate(subscription?.current_period_end)}</strong></p>
+          {!subscription ? <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">El producto aún no está vinculado a una compra de Hotmart. Los administradores y el entorno de desarrollo mantienen acceso de prueba.</p> : null}
         </article>
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="font-semibold text-slate-950">Ciclo actual</h3>
-          <dl className="mt-5 space-y-4 text-sm">
-            <div className="flex justify-between gap-4 border-b border-slate-100 pb-4"><dt className="text-slate-500">Inicio</dt><dd className="font-medium text-slate-800">{formatDate(subscription?.current_period_start)}</dd></div>
-            <div className="flex justify-between gap-4 border-b border-slate-100 pb-4"><dt className="text-slate-500">Fin</dt><dd className="font-medium text-slate-800">{formatDate(subscription?.current_period_end)}</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-slate-500">Proveedor</dt><dd className="font-medium capitalize text-slate-800">{subscription?.provider ?? "—"}</dd></div>
-          </dl>
-        </article>
-      </section>
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <h2 className="text-lg font-semibold text-slate-950">Límites del plan</h2>
-        <pre className="mt-5 overflow-x-auto rounded-xl bg-slate-50 p-5 text-sm leading-7 text-slate-700">{JSON.stringify(plan?.limits ?? {}, null, 2)}</pre>
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="font-semibold">Uso de este mes</h2><div className="mt-5 space-y-5">{[["Cotizaciones", used("quotes"), DECOQUOTE_CONFIG.limits.quotes_per_month],["PDF generados", used("pdf_generations"), DECOQUOTE_CONFIG.limits.pdf_generations_per_month]].map(([label, value, limit]) => <div key={String(label)}><div className="flex justify-between text-sm"><span className="text-slate-600">{String(label)}</span><strong>{Number(value)} / {Number(limit)}</strong></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-violet-500" style={{ width: `${Math.min((Number(value) / Number(limit)) * 100, 100)}%` }} /></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-500">Clientes ilimitados. Los límites comerciales se configuran centralmente en el plan.</p></article>
       </section>
     </div>
   );
