@@ -1,5 +1,12 @@
 import type { QuoteItemType, QuoteStatus } from "@/types/database";
 
+export const CURRENCY_OPTIONS = [
+  { code: "USD", label: "USD — Dólar estadounidense" },
+  { code: "EUR", label: "EUR — Euro" },
+] as const;
+
+export type SupportedCurrency = (typeof CURRENCY_OPTIONS)[number]["code"];
+
 export const DECOQUOTE_CONFIG = {
   name: "DecoQuote",
   fullName: "Magics DecoQuote",

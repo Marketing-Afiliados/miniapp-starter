@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { saveBusinessProfileAction } from "@/app/dashboard/decoquote-actions";
 import { FormFeedback } from "@/components/decoquote/form-feedback";
 import { SubmitButton } from "@/components/decoquote/submit-button";
+import { CURRENCY_OPTIONS } from "@/lib/decoquote/constants";
 import { initialActionState } from "@/types/action-state";
 import type { BusinessProfile } from "@/types/database";
 
@@ -49,8 +50,9 @@ export function BusinessProfileForm({
         </label>
         <label className="text-sm font-medium text-slate-700">Moneda
           <select className={input} defaultValue={profile?.currency ?? "USD"} name="currency">
-            <option value="USD">USD — Dólar estadounidense</option>
+            {CURRENCY_OPTIONS.map(({ code, label }) => <option key={code} value={code}>{label}</option>)}
           </select>
+          <span className="mt-1 block text-xs font-normal text-slate-500">Se aplicará a las nuevas cotizaciones; no convierte automáticamente importes existentes.</span>
         </label>
         <label className="text-sm font-medium text-slate-700">Margen predeterminado (%)
           <input className={input} defaultValue={profile?.default_margin_percentage ?? 40} min="0" name="defaultMarginPercentage" step="0.01" type="number" />

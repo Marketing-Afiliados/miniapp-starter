@@ -9,8 +9,9 @@ export function fromCents(cents: number): number {
   return cents / 100;
 }
 
-export function formatCurrency(cents: number, currency = "USD", locale = "es-EC"): string {
-  return new Intl.NumberFormat(locale, {
+export function formatCurrency(cents: number, currency = "USD", locale?: string): string {
+  const resolvedLocale = locale ?? (currency === "EUR" ? "es-ES" : "es-EC");
+  return new Intl.NumberFormat(resolvedLocale, {
     style: "currency",
     currency,
     minimumFractionDigits: 2,

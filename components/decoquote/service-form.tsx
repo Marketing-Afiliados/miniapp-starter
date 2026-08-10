@@ -10,7 +10,7 @@ import type { Service } from "@/types/database";
 
 const input = "mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100";
 
-export function ServiceForm({ service }: { service?: Service }) {
+export function ServiceForm({ service, currency = "USD" }: { service?: Service; currency?: string }) {
   const [state, action] = useActionState(saveServiceAction, initialActionState);
   return (
     <form action={action} className="space-y-4">
@@ -23,10 +23,10 @@ export function ServiceForm({ service }: { service?: Service }) {
         <textarea className={`${input} min-h-20 py-3`} defaultValue={service?.description ?? ""} name="description" />
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="text-sm font-medium text-slate-700">Costo (USD)
+        <label className="text-sm font-medium text-slate-700">Costo ({currency})
           <input className={input} defaultValue={centsToInput(service?.default_cost_cents ?? 0)} min="0" name="defaultCost" step="0.01" type="number" />
         </label>
-        <label className="text-sm font-medium text-slate-700">Precio (USD)
+        <label className="text-sm font-medium text-slate-700">Precio ({currency})
           <input className={input} defaultValue={centsToInput(service?.default_price_cents ?? 0)} min="0" name="defaultPrice" step="0.01" type="number" />
         </label>
       </div>

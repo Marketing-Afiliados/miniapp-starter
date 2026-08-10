@@ -11,7 +11,7 @@ import type { Material } from "@/types/database";
 
 const input = "mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100";
 
-export function MaterialForm({ material }: { material?: Material }) {
+export function MaterialForm({ material, currency = "USD" }: { material?: Material; currency?: string }) {
   const [state, action] = useActionState(saveMaterialAction, initialActionState);
   return (
     <form action={action} className="space-y-4">
@@ -24,7 +24,7 @@ export function MaterialForm({ material }: { material?: Material }) {
         <label className="text-sm font-medium text-slate-700">Unidad
           <select className={input} defaultValue={material?.unit ?? "unidad"} name="unit">{MATERIAL_UNITS.map((unit) => <option key={unit}>{unit}</option>)}</select>
         </label>
-        <label className="text-sm font-medium text-slate-700">Costo unitario (USD)
+        <label className="text-sm font-medium text-slate-700">Costo unitario ({currency})
           <input className={input} defaultValue={centsToInput(material?.unit_cost_cents ?? 0)} min="0" name="unitCost" step="0.01" type="number" />
         </label>
       </div>

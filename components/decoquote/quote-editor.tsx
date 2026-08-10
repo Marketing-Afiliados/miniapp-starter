@@ -19,6 +19,7 @@ function emptyItem(): QuoteEditorItem {
 }
 
 export function QuoteEditor({
+  currency,
   customers,
   services,
   materials,
@@ -27,6 +28,7 @@ export function QuoteEditor({
   quoteId,
   initial,
 }: {
+  currency: string;
   customers: Customer[];
   services: Service[];
   materials: Material[];
@@ -131,7 +133,7 @@ export function QuoteEditor({
                     <label className="text-xs font-medium text-slate-600 lg:col-span-2">Unidad<input className={input} onChange={(e) => updateItem(item.id, { unit: e.target.value })} value={item.unit} /></label>
                     <label className="text-xs font-medium text-slate-600 lg:col-span-2">Costo unitario<input className={input} min="0" onChange={(e) => updateItem(item.id, { unitCostCents: toCents(e.target.value) })} step="0.01" type="number" value={centsToInput(item.unitCostCents)} /></label>
                     <label className="text-xs font-medium text-slate-600 lg:col-span-2">Precio unitario<input className={input} min="0" onChange={(e) => updateItem(item.id, { unitPriceCents: toCents(e.target.value) })} step="0.01" type="number" value={centsToInput(item.unitPriceCents)} /></label>
-                    <div className="flex items-end text-sm font-semibold text-slate-700 lg:col-span-2">Total: {formatCurrency(Math.round(item.quantity * item.unitPriceCents))}</div>
+                    <div className="flex items-end text-sm font-semibold text-slate-700 lg:col-span-2">Total: {formatCurrency(Math.round(item.quantity * item.unitPriceCents), currency)}</div>
                   </div>
                 </article>
               ))}
@@ -153,10 +155,10 @@ export function QuoteEditor({
             <h2 className="text-lg font-semibold">5. Margen y precio final</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-medium text-slate-700">Tipo de margen<select className={input} onChange={(e) => setMarginType(e.target.value as "percentage" | "fixed")} value={marginType}><option value="percentage">Porcentaje sobre costo (markup)</option><option value="fixed">Monto fijo</option></select></label>
-              <label className="text-sm font-medium text-slate-700">{marginType === "percentage" ? "Porcentaje (%)" : "Margen fijo (USD)"}<input className={input} min="0" onChange={(e) => setMarginValue(marginType === "percentage" ? Number(e.target.value) : toCents(e.target.value))} step="0.01" type="number" value={marginType === "percentage" ? marginValue : centsToInput(marginValue)} /></label>
+              <label className="text-sm font-medium text-slate-700">{marginType === "percentage" ? "Porcentaje (%)" : `Margen fijo (${currency})`}<input className={input} min="0" onChange={(e) => setMarginValue(marginType === "percentage" ? Number(e.target.value) : toCents(e.target.value))} step="0.01" type="number" value={marginType === "percentage" ? marginValue : centsToInput(marginValue)} /></label>
               <label className="text-sm font-medium text-slate-700 sm:col-span-2">Precio final manual <span className="font-normal text-slate-400">(opcional)</span><input className={input} min="0" onChange={(e) => setFinalPrice(e.target.value ? toCents(e.target.value) : null)} placeholder={centsToInput(calculation.recommendedPriceCents)} step="0.01" type="number" value={finalPriceCents === null ? "" : centsToInput(finalPriceCents)} /></label>
             </div>
-            {calculation.hasLoss ? <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-800">Este precio genera una pérdida estimada de {formatCurrency(calculation.lossAmountCents)}.</p> : null}
+            {calculation.hasLoss ? <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-800">Este precio genera una pérdida estimada de {formatCurrency(calculation.lossAmountCents, currency)}.</p> : null}
           </section>
 
           <section className={card}>
@@ -171,14 +173,14 @@ export function QuoteEditor({
         <aside className="rounded-2xl bg-slate-950 p-5 text-white shadow-xl xl:sticky xl:top-8">
           <p className="text-xs font-semibold uppercase tracking-widest text-violet-300">Resumen en tiempo real</p>
           <dl className="mt-5 space-y-3 text-sm">
-            <div className="flex justify-between"><dt className="text-slate-300">Servicios/materiales</dt><dd>{formatCurrency(calculation.itemsCostCents)}</dd></div>
-            <div className="flex justify-between"><dt className="text-slate-300">Mano de obra</dt><dd>{formatCurrency(calculation.laborCostCents)}</dd></div>
-            <div className="flex justify-between"><dt className="text-slate-300">Transporte</dt><dd>{formatCurrency(calculation.transportCostCents)}</dd></div>
-            <div className="flex justify-between"><dt className="text-slate-300">Otros</dt><dd>{formatCurrency(calculation.otherCostCents)}</dd></div>
-            <div className="flex justify-between border-t border-slate-700 pt-3 font-semibold"><dt>Costo total</dt><dd>{formatCurrency(calculation.totalCostCents)}</dd></div>
-            <div className="flex justify-between"><dt className="text-slate-300">Ganancia estimada</dt><dd className={calculation.hasLoss ? "text-rose-300" : "text-emerald-300"}>{formatCurrency(calculation.estimatedProfitCents)}</dd></div>
+            <div className="flex justify-between"><dt className="text-slate-300">Servicios/materiales</dt><dd>{formatCurrency(calculation.itemsCostCents, currency)}</dd></div>
+            <div className="flex justify-between"><dt className="text-slate-300">Mano de obra</dt><dd>{formatCurrency(calculation.laborCostCents, currency)}</dd></div>
+            <div className="flex justify-between"><dt className="text-slate-300">Transporte</dt><dd>{formatCurrency(calculation.transportCostCents, currency)}</dd></div>
+            <div className="flex justify-between"><dt className="text-slate-300">Otros</dt><dd>{formatCurrency(calculation.otherCostCents, currency)}</dd></div>
+            <div className="flex justify-between border-t border-slate-700 pt-3 font-semibold"><dt>Costo total</dt><dd>{formatCurrency(calculation.totalCostCents, currency)}</dd></div>
+            <div className="flex justify-between"><dt className="text-slate-300">Ganancia estimada</dt><dd className={calculation.hasLoss ? "text-rose-300" : "text-emerald-300"}>{formatCurrency(calculation.estimatedProfitCents, currency)}</dd></div>
           </dl>
-          <div className="mt-5 rounded-xl bg-violet-500 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-violet-100">Precio recomendado</p><p className="mt-1 text-3xl font-semibold">{formatCurrency(calculation.recommendedPriceCents)}</p>{finalPriceCents !== null ? <p className="mt-2 text-sm text-violet-100">Precio final: {formatCurrency(calculation.finalPriceCents)}</p> : null}</div>
+          <div className="mt-5 rounded-xl bg-violet-500 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-violet-100">Precio recomendado</p><p className="mt-1 text-3xl font-semibold">{formatCurrency(calculation.recommendedPriceCents, currency)}</p>{finalPriceCents !== null ? <p className="mt-2 text-sm text-violet-100">Precio final: {formatCurrency(calculation.finalPriceCents, currency)}</p> : null}</div>
           <div className="mt-5"><SubmitButton pendingLabel="Guardando cotización…">{quoteId ? "Guardar cambios" : "Guardar cotización"}</SubmitButton></div>
         </aside>
       </div>

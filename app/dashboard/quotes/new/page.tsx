@@ -19,7 +19,7 @@ export default async function NewQuotePage() {
     <div>
       <PageHeader eyebrow="Cotizaciones" title="Nueva cotización" description="Calcula el costo real, protege tu ganancia y prepara una propuesta profesional." action={<Link className="text-sm font-semibold text-slate-600" href="/dashboard/quotes">Cancelar</Link>} />
       <div className="mt-8">
-        <QuoteEditor customers={customers ?? []} defaultMargin={business.default_margin_percentage} defaultTerms={business.default_terms ?? ""} materials={materials ?? []} services={services ?? []} />
+        <QuoteEditor currency={business.currency} customers={customers ?? []} defaultMargin={business.default_margin_percentage} defaultTerms={business.default_terms ?? ""} materials={materials ?? []} services={services ?? []} />
       </div>
     </div>
   );

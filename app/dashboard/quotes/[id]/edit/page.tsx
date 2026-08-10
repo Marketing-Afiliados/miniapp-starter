@@ -28,5 +28,5 @@ export default async function EditQuotePage({ params }: { params: Promise<{ id: 
     finalPriceCents: quote.final_price_cents === quote.recommended_price_cents ? null : quote.final_price_cents,
     notes: quote.notes ?? "", terms: quote.terms ?? "",
   };
-  return <div><PageHeader eyebrow={quote.quote_number} title="Editar cotización" description="Actualiza los datos y vuelve a calcular en tiempo real." /><div className="mt-8"><QuoteEditor customers={customers ?? []} defaultMargin={business.default_margin_percentage} defaultTerms={business.default_terms ?? ""} initial={initial} materials={materials ?? []} quoteId={id} services={services ?? []} /></div></div>;
+  return <div><PageHeader eyebrow={quote.quote_number} title="Editar cotización" description="Actualiza los datos y vuelve a calcular en tiempo real." /><div className="mt-8"><QuoteEditor currency={quote.currency} customers={customers ?? []} defaultMargin={business.default_margin_percentage} defaultTerms={business.default_terms ?? ""} initial={initial} materials={materials ?? []} quoteId={id} services={services ?? []} /></div></div>;
 }

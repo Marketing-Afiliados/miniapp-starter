@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { CURRENCY_OPTIONS } from "@/lib/decoquote/constants";
+
+const supportedCurrencies = CURRENCY_OPTIONS.map(({ code }) => code) as ["USD", "EUR"];
 
 const optionalText = (max: number) =>
   z.string().trim().max(max, `Usa máximo ${max} caracteres.`).transform((value) => value || null);
@@ -18,7 +21,7 @@ export const businessProfileSchema = z.object({
   instagram: optionalText(80),
   logoUrl: optionalText(500),
   address: optionalText(300),
-  currency: z.string().trim().length(3).transform((value) => value.toUpperCase()),
+  currency: z.enum(supportedCurrencies, { message: "Selecciona dólares o euros." }),
   defaultMarginPercentage: money.max(1000, "Revisa el porcentaje."),
   defaultTerms: optionalText(3000),
 });
