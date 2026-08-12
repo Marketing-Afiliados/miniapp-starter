@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Json, Plan, Subscription } from "@/types/database";
+import { getFeaturePlanLimit } from "@/lib/billing/limits";
+import type { Plan, Subscription } from "@/types/database";
 
 export interface SubscriptionAccess {
   subscription: Subscription;
@@ -12,10 +13,6 @@ export interface FeatureAccess {
   used: number;
   remaining: number | null;
   reason: "available" | "no_subscription" | "disabled" | "limit_reached";
-}
-
-function isRecord(value: Json): value is { [key: string]: Json | undefined } {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export async function getActiveSubscription(userId: string): Promise<SubscriptionAccess | null> {
@@ -54,21 +51,11 @@ export async function canUseFeature(userId: string, feature: string): Promise<Fe
     return { allowed: false, limit: null, used: 0, remaining: null, reason: "no_subscription" };
   }
 
-  const limits = access.plan.limits;
-  if (!isRecord(limits)) {
-    return { allowed: true, limit: null, used: 0, remaining: null, reason: "available" };
+  const policy = getFeaturePlanLimit(access.plan.limits, feature);
+  if (policy.kind === "disabled") {
+    return { allowed: false, limit: 0, used: 0, remaining: 0, reason: "disabled" };
   }
-
-  const directValue = limits[feature];
-  const monthlyValue = limits[`${feature}_per_month`];
-  const enabledValue = limits[`${feature}_enabled`];
-  const configured = directValue ?? monthlyValue ?? enabledValue;
-
-  if (configured === false || configured === 0) {
-    return { allowed: false, limit: configured === 0 ? 0 : null, used: 0, remaining: 0, reason: "disabled" };
-  }
-
-  if (typeof configured !== "number") {
+  if (policy.kind === "unlimited" || policy.kind === "unconfigured") {
     return { allowed: true, limit: null, used: 0, remaining: null, reason: "available" };
   }
 
@@ -88,11 +75,11 @@ export async function canUseFeature(userId: string, feature: string): Promise<Fe
     .gte("period_start", periodStart)
     .lte("period_end", periodEnd);
   const used = (records ?? []).reduce((total, item) => total + item.quantity, 0);
-  const remaining = Math.max(configured - used, 0);
+  const remaining = Math.max(policy.limit - used, 0);
 
   return {
     allowed: remaining > 0,
-    limit: configured,
+    limit: policy.limit,
     used,
     remaining,
     reason: remaining > 0 ? "available" : "limit_reached",

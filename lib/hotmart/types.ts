@@ -8,6 +8,8 @@ export interface HotmartEvent {
   transactionId: string | null;
   subscriptionId: string | null;
   productIds: string[];
+  offerCode: string | null;
+  subscriptionPlanId: string | null;
   orderDate: string | null;
   nextChargeDate: string | null;
   subscriptionStatus: SubscriptionStatus | null;
@@ -29,6 +31,15 @@ function asIsoDate(value: Json | undefined): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+function currentSwitchPlan(value: Json | undefined) {
+  if (!Array.isArray(value)) return null;
+  for (const item of value) {
+    const plan = asRecord(item);
+    if (plan?.current === true) return plan;
+  }
+  return null;
+}
+
 function statusForEvent(type: string): SubscriptionStatus | null {
   const statuses: Record<string, SubscriptionStatus> = {
     PURCHASE_APPROVED: "active",
@@ -40,6 +51,7 @@ function statusForEvent(type: string): SubscriptionStatus | null {
     SUBSCRIPTION_EXPIRED: "expired",
     PURCHASE_REFUNDED: "refunded",
     PURCHASE_CHARGEBACK: "refunded",
+    SWITCH_PLAN: "active",
   };
   return statuses[type] ?? null;
 }
@@ -56,8 +68,16 @@ export function normalizeHotmartEvent(payload: Json): HotmartEvent | null {
   const buyer = asRecord(data?.buyer);
   const purchase = asRecord(data?.purchase);
   const subscription = asRecord(data?.subscription);
-  const subscriber = asRecord(subscription?.subscriber);
-  const product = asRecord(data?.product);
+  const nestedSubscriber = asRecord(subscription?.subscriber);
+  const rootSubscriber = asRecord(data?.subscriber);
+  const subscriptionUser = asRecord(subscription?.user);
+  const purchaseOffer = asRecord(purchase?.offer);
+  const subscriptionPlan = asRecord(subscription?.plan);
+  const billingPlan = asRecord(data?.plan);
+  const currentPlan = currentSwitchPlan(data?.plans);
+  const currentPlanOffer = asRecord(currentPlan?.offer);
+  const subscriptionProduct = asRecord(subscription?.product);
+  const product = asRecord(data?.product) ?? subscriptionProduct;
   const productIds = [asString(product?.ucode), asString(product?.id)].filter(
     (value): value is string => Boolean(value),
   );
@@ -66,12 +86,30 @@ export function normalizeHotmartEvent(payload: Json): HotmartEvent | null {
     id,
     type,
     createdAt: asIsoDate(root.creation_date) ?? new Date().toISOString(),
-    buyerEmail: asString(buyer?.email)?.toLowerCase() ?? null,
+    buyerEmail:
+      asString(buyer?.email)?.toLowerCase() ??
+      asString(rootSubscriber?.email)?.toLowerCase() ??
+      asString(subscriptionUser?.email)?.toLowerCase() ??
+      null,
     transactionId: asString(purchase?.transaction),
-    subscriptionId: asString(subscriber?.code),
+    subscriptionId:
+      asString(nestedSubscriber?.code) ??
+      asString(rootSubscriber?.code) ??
+      asString(subscription?.subscriber_code),
     productIds: [...new Set(productIds)],
-    orderDate: asIsoDate(purchase?.order_date),
-    nextChargeDate: asIsoDate(purchase?.date_next_charge),
+    offerCode:
+      asString(purchaseOffer?.code) ??
+      asString(currentPlanOffer?.key) ??
+      asString(asRecord(billingPlan?.offer)?.code),
+    subscriptionPlanId:
+      asString(subscriptionPlan?.id) ??
+      asString(currentPlan?.id) ??
+      asString(billingPlan?.id),
+    orderDate: asIsoDate(purchase?.order_date) ?? asIsoDate(data?.switch_plan_date),
+    nextChargeDate:
+      asIsoDate(purchase?.date_next_charge) ??
+      asIsoDate(data?.date_next_charge) ??
+      asIsoDate(subscription?.date_next_charge),
     subscriptionStatus: statusForEvent(type),
   };
 }

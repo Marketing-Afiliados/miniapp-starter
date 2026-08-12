@@ -2,6 +2,10 @@ import "server-only";
 
 import type { User } from "@supabase/supabase-js";
 
+import {
+  resolveHotmartPlan,
+  type HotmartPlanReference,
+} from "@/lib/hotmart/plan-mapping";
 import { normalizeHotmartEvent } from "@/lib/hotmart/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
@@ -44,21 +48,32 @@ async function findProfile(email: string | null): Promise<Profile> {
   return data;
 }
 
-async function findPlan(productIds: string[]): Promise<Plan> {
+async function findPlan(reference: HotmartPlanReference): Promise<Plan> {
   const supabase = createAdminClient();
-  if (productIds.length > 0) {
+  if (reference.productIds.length > 0) {
     const { data, error } = await supabase
       .from("plans")
       .select("*")
-      .in("provider_product_id", productIds)
-      .eq("active", true)
-      .limit(1)
-      .maybeSingle();
+      .in("provider_product_id", reference.productIds)
+      .eq("active", true);
     if (error) throw new HotmartWebhookError("PLAN_LOOKUP_FAILED", 500);
-    if (data) return data;
+    const resolution = resolveHotmartPlan(data ?? [], reference);
+    if (resolution.status === "matched") return resolution.plan;
+    if (resolution.status === "ambiguous") {
+      throw new HotmartWebhookError("PLAN_MAPPING_AMBIGUOUS", 422);
+    }
+    if ((data ?? []).length > 0) {
+      throw new HotmartWebhookError("PLAN_MAPPING_NOT_FOUND", 422);
+    }
   }
 
-  const defaultCode = process.env.HOTMART_DEFAULT_PLAN_CODE;
+  const hasProviderReference =
+    reference.productIds.length > 0 ||
+    reference.offerCode !== null ||
+    reference.subscriptionPlanId !== null;
+  const defaultCode = hasProviderReference
+    ? null
+    : process.env.HOTMART_DEFAULT_PLAN_CODE;
   if (defaultCode) {
     const { data, error } = await supabase
       .from("plans")
@@ -88,7 +103,8 @@ async function upsertSubscription(input: SubscriptionInput) {
       plan_id: input.planId,
       provider: "hotmart",
       provider_subscription_id: input.providerSubscriptionId,
-      provider_transaction_id: input.transactionId,
+      provider_transaction_id:
+        input.transactionId ?? current?.provider_transaction_id ?? null,
       status: input.status,
       started_at:
         current?.started_at ??
@@ -162,7 +178,11 @@ export async function processHotmartWebhook(payload: Json) {
         throw new HotmartWebhookError("SUBSCRIPTION_IDENTIFIER_MISSING", 422);
       }
 
-      const plan = await findPlan(event.productIds);
+      const plan = await findPlan({
+        productIds: event.productIds,
+        offerCode: event.offerCode,
+        subscriptionPlanId: event.subscriptionPlanId,
+      });
       await supabase
         .from("webhook_events")
         .update({ plan_id: plan.id })

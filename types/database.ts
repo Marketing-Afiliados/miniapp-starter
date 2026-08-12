@@ -40,6 +40,8 @@ export interface Plan extends Record<string, unknown> {
   billing_interval: string;
   limits: Json;
   provider_product_id: string | null;
+  provider_offer_code: string | null;
+  provider_plan_id: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;

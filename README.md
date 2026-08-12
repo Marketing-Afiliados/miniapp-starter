@@ -121,7 +121,7 @@ Los tests obligatorios cubren markup del 40%, margen fijo, pérdida y cantidad p
 | `NEXT_PUBLIC_SITE_URL` | Pública | URL canónica de producción. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Secreta | Webhook y conciliación confiable. |
 | `HOTMART_HOTTOK` | Secreta | Autenticación de Webhook 2.0. |
-| `HOTMART_DEFAULT_PLAN_CODE` | Privada/opcional | Fallback; recomendado `decoquote-pro`. |
+| `HOTMART_DEFAULT_PLAN_CODE` | Privada/opcional | Fallback legado; dejar vacío cuando existen varios planes Hotmart. |
 | `DECOQUOTE_DEV_ACCESS` | Privada/opcional | Bypass temporal para QA sin suscripción. |
 
 No subas `.env.local`. Para una prueba temporal en Vercel Production puedes usar `DECOQUOTE_DEV_ACCESS=true`, desplegar y retirarla al terminar. Nunca la dejes habilitada cuando entren usuarios normales.
@@ -136,6 +136,8 @@ En un proyecto ya configurado, aplica las migraciones DecoQuote en orden:
 supabase/migrations/202608090004_decoquote.sql
 supabase/migrations/202608100001_business_logo_storage.sql
 supabase/migrations/202608100002_business_country.sql
+supabase/migrations/202608110001_hotmart_multi_plan.sql
+supabase/migrations/202608110002_decoquote_plans.sql
 ```
 
 Con Supabase CLI:
@@ -147,16 +149,23 @@ supabase db push
 
 O copia el contenido completo en Supabase Dashboard → SQL Editor → New query → Run.
 
-Las migraciones son incrementales: no contienen `DROP TABLE`, no borran Auth ni las tablas del Starter. La segunda crea el bucket público `business-logos`, limita archivos a PNG/JPG de 2 MB y protege escritura/eliminación por propietario mediante RLS. La tercera agrega el país del negocio para ofrecer USD, EUR y la moneda local correspondiente. La primera también crea o actualiza el plan:
+Las migraciones son incrementales: no contienen `DROP TABLE`, no borran Auth ni las tablas del Starter. La segunda crea el bucket público `business-logos`, limita archivos a PNG/JPG de 2 MB y protege escritura/eliminación por propietario mediante RLS. La tercera agrega el país del negocio para ofrecer USD, EUR y la moneda local correspondiente. Las últimas migraciones agregan el mapeo Hotmart multi-plan y crean o actualizan:
 
 ```text
-code: decoquote-pro
+code: decoquote-emprende
 price: 9.99 USD / month
-limits:
   quotes_per_month: 50
   pdf_generations_per_month: 50
   customers: -1
+
+code: decoquote-pro
+price: 19.99 USD / month
+  quotes_per_month: -1
+  pdf_generations_per_month: -1
+  customers: -1
 ```
+
+`-1` significa uso ilimitado.
 
 Después de aplicarla, usa Table Editor para revisar las seis tablas de producto.
 
@@ -179,11 +188,12 @@ POST /api/webhooks/hotmart
 Cuando el producto exista:
 
 1. Crea el producto/suscripción DecoQuote Pro en Hotmart.
-2. Copia el identificador real del producto a `plans.provider_product_id` para el plan `decoquote-pro`.
-3. Configura el Webhook 2.0 con la URL Production.
-4. Configura `HOTMART_HOTTOK` en Vercel.
-5. Activa eventos de compra aprobada/completa, retrasada, cancelada, expirada, reembolso y chargeback.
-6. Ejecuta una compra de prueba y comprueba `/admin/webhooks` y `/admin/subscriptions`.
+2. En cada fila de `plans`, guarda el mismo producto en `provider_product_id` y diferencia Emprende/Pro mediante `provider_offer_code` (`purchase.offer.code`) y `provider_plan_id` (`subscription.plan.id`).
+3. Los checkouts públicos se centralizan en `lib/decoquote/constants.ts`; la landing enlaza Emprende con `r5jsptik` y Pro con `lyyel4u7`.
+4. Configura el Webhook 2.0 con la URL Production.
+5. Configura `HOTMART_HOTTOK` en Vercel.
+6. Activa eventos de compra aprobada/completa, retrasada, cancelada, expirada, reembolso y chargeback.
+7. Ejecuta una compra de prueba y comprueba `/admin/webhooks` y `/admin/subscriptions`.
 
 Flujo:
 

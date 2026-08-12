@@ -42,17 +42,37 @@ export const DECOQUOTE_CONFIG = {
   fullName: "Magics DecoQuote",
   tagline: "Cotiza tus decoraciones con confianza y conoce cuánto realmente ganas.",
   currency: "USD",
-  plan: {
-    code: "decoquote-pro",
-    name: "DecoQuote Pro",
-    price: 9.99,
-    billingInterval: "mes",
-  },
-  limits: {
-    quotes_per_month: 50,
-    pdf_generations_per_month: 50,
-    customers: -1,
-  },
+  defaultPlanCode: "decoquote-emprende",
+  plans: [
+    {
+      code: "decoquote-emprende",
+      name: "DecoQuote Emprende",
+      price: 9.99,
+      billingInterval: "mes",
+      checkoutUrl: "https://pay.hotmart.com/A107093913L?off=r5jsptik",
+      description: "Para comenzar a cotizar con claridad y controlar tu ganancia.",
+      featured: false,
+      limits: {
+        quotes_per_month: 50,
+        pdf_generations_per_month: 50,
+        customers: -1,
+      },
+    },
+    {
+      code: "decoquote-pro",
+      name: "DecoQuote Pro",
+      price: 19.99,
+      billingInterval: "mes",
+      checkoutUrl: "https://pay.hotmart.com/A107093913L?off=lyyel4u7",
+      description: "Para negocios con mayor volumen de cotizaciones y propuestas.",
+      featured: true,
+      limits: {
+        quotes_per_month: -1,
+        pdf_generations_per_month: -1,
+        customers: -1,
+      },
+    },
+  ],
 } as const;
 
 export const QUOTE_STATUS: Record<Uppercase<QuoteStatus>, QuoteStatus> = {

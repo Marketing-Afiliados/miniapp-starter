@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getCurrencyOptionsForCountry } from "./constants";
+import { DECOQUOTE_CONFIG, getCurrencyOptionsForCountry } from "./constants";
 
 describe("getCurrencyOptionsForCountry", () => {
   it.each([
@@ -11,5 +11,22 @@ describe("getCurrencyOptionsForCountry", () => {
     ["ES", ["USD", "EUR"]],
   ])("ofrece monedas estandar y local para %s", (country, expected) => {
     expect(getCurrencyOptionsForCountry(country).map((option) => option.code)).toEqual(expected);
+  });
+});
+
+describe("planes DecoQuote", () => {
+  it("conecta cada plan con su oferta de Hotmart", () => {
+    expect(
+      DECOQUOTE_CONFIG.plans.map(({ code, checkoutUrl }) => [code, checkoutUrl]),
+    ).toEqual([
+      [
+        "decoquote-emprende",
+        "https://pay.hotmart.com/A107093913L?off=r5jsptik",
+      ],
+      [
+        "decoquote-pro",
+        "https://pay.hotmart.com/A107093913L?off=lyyel4u7",
+      ],
+    ]);
   });
 });
