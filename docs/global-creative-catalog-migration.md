@@ -28,6 +28,10 @@ a reemplazar de manera controlada una restricción, políticas y triggers por no
 5. Ejecuta las comprobaciones de abajo.
 6. Despliega el código únicamente después de aplicar la migración.
 
+Ejecuta siempre el archivo completo, no solamente los bloques de `INSERT`. La
+tabla temporal `catalog_seed` se conserva durante la sesión del SQL Editor para
+ser compatible con ejecuciones que confirman bloques individuales.
+
 ```sql
 select count(*) from public.catalog_categories where active;
 select count(*) from public.catalog_subcategories where active;

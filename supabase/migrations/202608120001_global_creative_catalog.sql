@@ -200,10 +200,14 @@ from seed join public.catalog_categories categories on categories.code=seed.cate
 on conflict (category_id, code) do update set name=excluded.name, sort_order=excluded.sort_order,
   active=true, updated_at=now();
 
-create temporary table catalog_seed (
+create temporary table if not exists catalog_seed (
   item_code text, item_name text, item_type text, unit text,
   category_code text, subcategory_code text, keywords text, sort_order integer
-) on commit drop;
+) on commit preserve rows;
+
+-- Supabase SQL Editor can commit individual statement blocks. Preserve this
+-- session-scoped staging table across those commits and reset it on every run.
+delete from catalog_seed;
 
 insert into catalog_seed values
   ('organic-balloon-arch','Arco orgánico de globos','service','servicio','balloons','balloon-services','arco guirnalda fiesta',10),
