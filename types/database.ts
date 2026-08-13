@@ -16,7 +16,15 @@ export type SubscriptionStatus =
   | "expired"
   | "refunded";
 export type QuoteStatus = "draft" | "sent" | "approved" | "rejected" | "expired" | "completed";
-export type QuoteItemType = "service" | "material" | "custom";
+export type CatalogItemType =
+  | "material"
+  | "service"
+  | "product"
+  | "labor"
+  | "equipment"
+  | "transport"
+  | "other";
+export type QuoteItemType = CatalogItemType | "custom";
 export type MarginType = "percentage" | "fixed";
 
 export interface Profile extends Record<string, unknown> {
@@ -132,6 +140,10 @@ export interface Service extends Record<string, unknown> {
   description: string | null;
   default_price_cents: number;
   default_cost_cents: number;
+  category_id: string | null;
+  subcategory_id: string | null;
+  item_type: Exclude<CatalogItemType, "material">;
+  unit: string;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -141,9 +153,76 @@ export interface Material extends Record<string, unknown> {
   id: string;
   user_id: string;
   name: string;
+  description: string | null;
   unit: string;
   unit_cost_cents: number;
+  default_price_cents: number;
+  category_id: string | null;
+  subcategory_id: string | null;
   active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CatalogCategory extends Record<string, unknown> {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CatalogSubcategory extends Record<string, unknown> {
+  id: string;
+  category_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CatalogItem extends Record<string, unknown> {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  item_type: CatalogItemType;
+  unit: string;
+  default_cost_cents: number;
+  default_price_cents: number;
+  search_keywords: string;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CatalogItemCategory extends Record<string, unknown> {
+  item_id: string;
+  category_id: string;
+  subcategory_id: string;
+  sort_order: number;
+}
+
+export interface BusinessCatalogCategory extends Record<string, unknown> {
+  user_id: string;
+  category_id: string;
+  created_at: string;
+}
+
+export interface CatalogItemOverride extends Record<string, unknown> {
+  user_id: string;
+  catalog_item_id: string;
+  unit: string | null;
+  default_cost_cents: number | null;
+  default_price_cents: number | null;
+  hidden: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -259,6 +338,36 @@ export interface Database {
         Pick<Material, "user_id" | "name"> & Partial<Omit<Material, "id" | "user_id" | "name">>,
         Partial<Omit<Material, "id" | "user_id">>
       >;
+      catalog_categories: TableDefinition<
+        CatalogCategory,
+        Pick<CatalogCategory, "code" | "name"> & Partial<Omit<CatalogCategory, "id" | "code" | "name">>,
+        Partial<Omit<CatalogCategory, "id">>
+      >;
+      catalog_subcategories: TableDefinition<
+        CatalogSubcategory,
+        Pick<CatalogSubcategory, "category_id" | "code" | "name"> & Partial<Omit<CatalogSubcategory, "id" | "category_id" | "code" | "name">>,
+        Partial<Omit<CatalogSubcategory, "id">>
+      >;
+      catalog_items: TableDefinition<
+        CatalogItem,
+        Pick<CatalogItem, "code" | "name" | "item_type"> & Partial<Omit<CatalogItem, "id" | "code" | "name" | "item_type">>,
+        Partial<Omit<CatalogItem, "id">>
+      >;
+      catalog_item_categories: TableDefinition<
+        CatalogItemCategory,
+        CatalogItemCategory,
+        Partial<CatalogItemCategory>
+      >;
+      business_catalog_categories: TableDefinition<
+        BusinessCatalogCategory,
+        BusinessCatalogCategory,
+        Partial<Omit<BusinessCatalogCategory, "user_id" | "category_id">>
+      >;
+      catalog_item_overrides: TableDefinition<
+        CatalogItemOverride,
+        Pick<CatalogItemOverride, "user_id" | "catalog_item_id"> & Partial<Omit<CatalogItemOverride, "user_id" | "catalog_item_id">>,
+        Partial<Omit<CatalogItemOverride, "user_id" | "catalog_item_id">>
+      >;
       quotes: TableDefinition<
         Quote,
         Pick<Quote, "user_id" | "customer_id" | "event_name" | "event_type" | "event_date" | "event_location"> &
@@ -284,6 +393,10 @@ export interface Database {
       };
       record_decoquote_usage: {
         Args: { p_feature: string; p_quantity?: number };
+        Returns: undefined;
+      };
+      set_business_catalog_categories: {
+        Args: { p_category_ids: string[] };
         Returns: undefined;
       };
     };

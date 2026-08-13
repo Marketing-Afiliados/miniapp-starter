@@ -5,11 +5,12 @@ import { saveQuoteAction } from "@/app/dashboard/quotes/actions";
 import { FormFeedback } from "@/components/decoquote/form-feedback";
 import { SubmitButton } from "@/components/decoquote/submit-button";
 import { calculateQuote } from "@/lib/decoquote/calculations";
+import { CATALOG_ITEM_TYPE_LABELS, filterCatalogItems } from "@/lib/decoquote/catalog";
 import { buildCommercialProposalLines } from "@/lib/decoquote/commercial-lines";
 import { centsToInput, formatCurrency, toCents, toDecimal } from "@/lib/decoquote/money";
 import { initialActionState } from "@/types/action-state";
-import type { Customer, Material, Service } from "@/types/database";
-import type { QuoteEditorItem, QuoteEditorPayload } from "@/types/decoquote";
+import type { CatalogCategory, Customer, Material, Service } from "@/types/database";
+import type { CatalogItemView, QuoteEditorItem, QuoteEditorPayload } from "@/types/decoquote";
 
 const input = "mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100";
 const card = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6";
@@ -24,6 +25,9 @@ export function QuoteEditor({
   customers,
   services,
   materials,
+  catalogItems,
+  catalogCategories,
+  preferredCategoryIds,
   defaultMargin,
   defaultTerms,
   quoteId,
@@ -33,6 +37,9 @@ export function QuoteEditor({
   customers: Customer[];
   services: Service[];
   materials: Material[];
+  catalogItems: CatalogItemView[];
+  catalogCategories: CatalogCategory[];
+  preferredCategoryIds: string[];
   defaultMargin: number;
   defaultTerms: string;
   quoteId?: string;
@@ -55,6 +62,15 @@ export function QuoteEditor({
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [terms, setTerms] = useState(initial?.terms ?? defaultTerms);
   const [catalog, setCatalog] = useState("");
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const [workCategoryId, setWorkCategoryId] = useState("");
+  const [showAllCatalog, setShowAllCatalog] = useState(preferredCategoryIds.length === 0);
+  const visibleCatalogItems = useMemo(() => filterCatalogItems(catalogItems, {
+    query: catalogQuery,
+    categoryId: showAllCatalog ? undefined : workCategoryId || undefined,
+    preferredCategoryIds,
+    showAll: showAllCatalog,
+  }), [catalogItems, catalogQuery, preferredCategoryIds, showAllCatalog, workCategoryId]);
 
   const calculation = useMemo(() => calculateQuote({
     items: items.map((item) => ({ itemType: item.itemType, quantity: item.quantity, unitCostCents: item.unitCostCents, unitPriceCents: item.unitPriceCents })),
@@ -94,7 +110,20 @@ export function QuoteEditor({
       if (service) setItems((current) => [...current, { id: newId(), itemType: "service", referenceId: service.id, name: service.name, description: service.description ?? "", quantity: 1, unit: "servicio", unitCostCents: service.default_cost_cents, unitPriceCents: service.default_price_cents }]);
     } else if (kind === "material") {
       const material = materials.find((entry) => entry.id === id);
-      if (material) setItems((current) => [...current, { id: newId(), itemType: "material", referenceId: material.id, name: material.name, description: "", quantity: 1, unit: material.unit, unitCostCents: material.unit_cost_cents, unitPriceCents: material.unit_cost_cents }]);
+      if (material) setItems((current) => [...current, { id: newId(), itemType: "material", referenceId: material.id, name: material.name, description: material.description ?? "", quantity: 1, unit: material.unit, unitCostCents: material.unit_cost_cents, unitPriceCents: material.default_price_cents }]);
+    } else if (kind === "global") {
+      const item = catalogItems.find((entry) => entry.id === id);
+      if (item) setItems((current) => [...current, {
+        id: newId(),
+        itemType: item.itemType,
+        referenceId: item.id,
+        name: item.name,
+        description: item.description,
+        quantity: 1,
+        unit: item.unit,
+        unitCostCents: item.defaultCostCents,
+        unitPriceCents: item.defaultPriceCents,
+      }]);
     }
     setCatalog("");
   }
@@ -136,11 +165,27 @@ export function QuoteEditor({
 
           <section className={card}>
             <h2 className="text-lg font-semibold text-slate-950">3. Servicios y materiales</h2>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <div className="mt-4 rounded-xl border border-violet-100 bg-violet-50/40 p-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">Tipo de trabajo
+                  <select className={input} disabled={showAllCatalog} onChange={(event) => setWorkCategoryId(event.target.value)} value={workCategoryId}>
+                    <option value="">Mis rubros prioritarios</option>
+                    {catalogCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">Buscar catálogo
+                  <input className={input} onChange={(event) => setCatalogQuery(event.target.value)} placeholder="globo, cartulina, topper…" type="search" value={catalogQuery} />
+                </label>
+              </div>
+              <label className="mt-3 flex items-center gap-2 text-xs font-medium text-slate-600"><input checked={showAllCatalog} className="size-4 accent-violet-600" onChange={(event) => setShowAllCatalog(event.target.checked)} type="checkbox" />Ver todo el catálogo</label>
+              <p className="mt-2 text-xs leading-5 text-slate-500">Los elementos de tus rubros aparecen primero. Sus costos y precios siguen abiertos para que coloques tus valores reales.</p>
+            </div>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <select className={`${input} mt-0 flex-1`} onChange={(e) => setCatalog(e.target.value)} value={catalog}>
                 <option value="">Agregar desde el catálogo…</option>
-                {services.map((service) => <option key={service.id} value={`service:${service.id}`}>Servicio · {service.name}</option>)}
-                {materials.map((material) => <option key={material.id} value={`material:${material.id}`}>Material · {material.name}</option>)}
+                {visibleCatalogItems.map((item) => <option key={item.id} value={`global:${item.id}`}>{CATALOG_ITEM_TYPE_LABELS[item.itemType]} · {item.name} · {item.categoryNames[0] ?? "General"}</option>)}
+                {services.map((service) => <option key={service.id} value={`service:${service.id}`}>Mi catálogo · {service.name}</option>)}
+                {materials.map((material) => <option key={material.id} value={`material:${material.id}`}>Mi material · {material.name}</option>)}
               </select>
               <button className="min-h-11 rounded-xl border border-violet-200 px-4 text-sm font-semibold text-violet-700 disabled:opacity-40" disabled={!catalog} onClick={addCatalogItem} type="button">Agregar</button>
               <button className="min-h-11 rounded-xl border border-slate-200 px-4 text-sm font-semibold" onClick={() => setItems((current) => [...current, emptyItem()])} type="button">+ Personalizado</button>

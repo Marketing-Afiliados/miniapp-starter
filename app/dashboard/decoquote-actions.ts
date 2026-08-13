@@ -13,6 +13,7 @@ import {
 import { toCents } from "@/lib/decoquote/money";
 import {
   businessProfileSchema,
+  catalogOverrideSchema,
   customerSchema,
   formValue,
   materialSchema,
@@ -101,6 +102,15 @@ export async function saveBusinessProfileAction(
     return { status: "error", message: "No pudimos guardar el perfil del negocio." };
   }
 
+  const categoryIds = formData.getAll("businessCategoryIds")
+    .filter((value): value is string => typeof value === "string");
+  const { error: categoryError } = await supabase.rpc("set_business_catalog_categories", {
+    p_category_ids: categoryIds,
+  });
+  if (categoryError) {
+    return { status: "error", message: "El perfil se guardó, pero no pudimos actualizar tus rubros." };
+  }
+
   const previousLogoPath = getBusinessLogoStoragePath(previousLogoUrl);
   if (previousLogoPath && previousLogoPath !== uploadedLogoPath && (uploadedLogoPath || checked(formData, "removeLogo"))) {
     await supabase.storage.from(BUSINESS_LOGO_BUCKET).remove([previousLogoPath]);
@@ -166,17 +176,34 @@ export async function saveServiceAction(
     description: formValue(formData, "description"),
     defaultCost: formValue(formData, "defaultCost"),
     defaultPrice: formValue(formData, "defaultPrice"),
+    itemType: formValue(formData, "itemType") || "service",
+    unit: formValue(formData, "unit") || "servicio",
+    categoryId: formValue(formData, "categoryId") || null,
+    subcategoryId: formValue(formData, "subcategoryId") || null,
     active: checked(formData, "active"),
   });
   if (!result.success) return { status: "error", message: "Revisa los campos indicados.", fieldErrors: zodFieldErrors(result.error) };
   const { id, ...data } = result.data;
   const supabase = await createClient();
+  if (data.subcategoryId) {
+    const { data: subcategory } = await supabase
+      .from("catalog_subcategories")
+      .select("id")
+      .eq("id", data.subcategoryId)
+      .eq("category_id", data.categoryId ?? "")
+      .maybeSingle();
+    if (!subcategory) return { status: "error", message: "La subcategoría no pertenece a la categoría seleccionada." };
+  }
   const payload = {
     user_id: user.id,
     name: data.name,
     description: data.description,
     default_cost_cents: toCents(data.defaultCost),
     default_price_cents: toCents(data.defaultPrice),
+    item_type: data.itemType,
+    unit: data.unit,
+    category_id: data.categoryId,
+    subcategory_id: data.subcategoryId,
     active: data.active,
   };
   const query = id
@@ -203,18 +230,35 @@ export async function saveMaterialAction(
   const result = materialSchema.safeParse({
     id: formValue(formData, "id") || undefined,
     name: formValue(formData, "name"),
+    description: formValue(formData, "description"),
     unit: formValue(formData, "unit"),
     unitCost: formValue(formData, "unitCost"),
+    defaultPrice: formValue(formData, "defaultPrice"),
+    categoryId: formValue(formData, "categoryId") || null,
+    subcategoryId: formValue(formData, "subcategoryId") || null,
     active: checked(formData, "active"),
   });
   if (!result.success) return { status: "error", message: "Revisa los campos indicados.", fieldErrors: zodFieldErrors(result.error) };
   const { id, ...data } = result.data;
   const supabase = await createClient();
+  if (data.subcategoryId) {
+    const { data: subcategory } = await supabase
+      .from("catalog_subcategories")
+      .select("id")
+      .eq("id", data.subcategoryId)
+      .eq("category_id", data.categoryId ?? "")
+      .maybeSingle();
+    if (!subcategory) return { status: "error", message: "La subcategoría no pertenece a la categoría seleccionada." };
+  }
   const payload = {
     user_id: user.id,
     name: data.name,
+    description: data.description,
     unit: data.unit,
     unit_cost_cents: toCents(data.unitCost),
+    default_price_cents: toCents(data.defaultPrice),
+    category_id: data.categoryId,
+    subcategory_id: data.subcategoryId,
     active: data.active,
   };
   const query = id
@@ -224,6 +268,45 @@ export async function saveMaterialAction(
   if (error) return { status: "error", message: "No pudimos guardar el material." };
   revalidatePath("/dashboard/materials");
   return { status: "success", message: id ? "Material actualizado." : "Material creado." };
+}
+
+export async function saveCatalogOverrideAction(
+  _state: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const { user } = await requireUser();
+  const result = catalogOverrideSchema.safeParse({
+    catalogItemId: formValue(formData, "catalogItemId"),
+    unit: formValue(formData, "unit"),
+    defaultCost: formValue(formData, "defaultCost"),
+    defaultPrice: formValue(formData, "defaultPrice"),
+    hidden: checked(formData, "hidden"),
+  });
+  if (!result.success) {
+    return { status: "error", message: "Revisa los valores del catálogo.", fieldErrors: zodFieldErrors(result.error) };
+  }
+  const data = result.data;
+  const supabase = await createClient();
+  const { data: globalItem } = await supabase
+    .from("catalog_items")
+    .select("id")
+    .eq("id", data.catalogItemId)
+    .eq("active", true)
+    .maybeSingle();
+  if (!globalItem) return { status: "error", message: "El elemento global ya no está disponible." };
+  const { error } = await supabase.from("catalog_item_overrides").upsert({
+    user_id: user.id,
+    catalog_item_id: data.catalogItemId,
+    unit: data.unit,
+    default_cost_cents: toCents(data.defaultCost),
+    default_price_cents: toCents(data.defaultPrice),
+    hidden: data.hidden,
+  }, { onConflict: "user_id,catalog_item_id" });
+  if (error) return { status: "error", message: "No pudimos guardar tu personalización." };
+  revalidatePath("/dashboard/services");
+  revalidatePath("/dashboard/materials");
+  revalidatePath("/dashboard/quotes/new");
+  return { status: "success", message: data.hidden ? "Elemento ocultado." : "Valores personalizados." };
 }
 
 export async function toggleMaterialAction(formData: FormData): Promise<void> {

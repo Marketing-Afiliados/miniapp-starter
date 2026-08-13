@@ -1,17 +1,22 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { saveServiceAction } from "@/app/dashboard/decoquote-actions";
 import { FormFeedback } from "@/components/decoquote/form-feedback";
 import { SubmitButton } from "@/components/decoquote/submit-button";
+import { ITEM_TYPE_LABEL, MATERIAL_UNITS } from "@/lib/decoquote/constants";
 import { centsToInput } from "@/lib/decoquote/money";
 import { initialActionState } from "@/types/action-state";
-import type { Service } from "@/types/database";
+import type { CatalogCategory, CatalogSubcategory, Service } from "@/types/database";
 
 const input = "mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100";
 
-export function ServiceForm({ service, currency = "USD" }: { service?: Service; currency?: string }) {
+export function ServiceForm({ service, currency = "USD", categories = [], subcategories = [] }: { service?: Service; currency?: string; categories?: CatalogCategory[]; subcategories?: CatalogSubcategory[] }) {
   const [state, action] = useActionState(saveServiceAction, initialActionState);
+  const [categoryId, setCategoryId] = useState(service?.category_id ?? "");
+  const availableSubcategories = categoryId
+    ? subcategories.filter((subcategory) => subcategory.category_id === categoryId)
+    : [];
   return (
     <form action={action} className="space-y-4">
       {service ? <input name="id" type="hidden" value={service.id} /> : null}
@@ -22,6 +27,22 @@ export function ServiceForm({ service, currency = "USD" }: { service?: Service; 
       <label className="block text-sm font-medium text-slate-700">Descripción
         <textarea className={`${input} min-h-20 py-3`} defaultValue={service?.description ?? ""} name="description" />
       </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="text-sm font-medium text-slate-700">Tipo
+          <select className={input} defaultValue={service?.item_type ?? "service"} name="itemType">
+            {(["service", "product", "labor", "equipment", "transport", "other"] as const).map((type) => <option key={type} value={type}>{ITEM_TYPE_LABEL[type]}</option>)}
+          </select>
+        </label>
+        <label className="text-sm font-medium text-slate-700">Unidad
+          <select className={input} defaultValue={service?.unit ?? "servicio"} name="unit">{MATERIAL_UNITS.map((unit) => <option key={unit}>{unit}</option>)}</select>
+        </label>
+        <label className="text-sm font-medium text-slate-700">Categoría
+          <select className={input} name="categoryId" onChange={(event) => setCategoryId(event.target.value)} value={categoryId}><option value="">Sin categoría</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
+        </label>
+        <label className="text-sm font-medium text-slate-700">Subcategoría
+          <select className={input} defaultValue={service?.subcategory_id ?? ""} key={categoryId} name="subcategoryId"><option value="">Sin subcategoría</option>{availableSubcategories.map((subcategory) => <option key={subcategory.id} value={subcategory.id}>{subcategory.name}</option>)}</select>
+        </label>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm font-medium text-slate-700">Costo ({currency})
           <input className={input} defaultValue={service ? centsToInput(service.default_cost_cents) : ""} min="0" name="defaultCost" placeholder="0.00" step="0.01" type="number" />

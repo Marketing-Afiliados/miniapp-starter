@@ -12,7 +12,7 @@ import {
   type SupportedCurrency,
 } from "@/lib/decoquote/constants";
 import { initialActionState } from "@/types/action-state";
-import type { BusinessProfile } from "@/types/database";
+import type { BusinessProfile, CatalogCategory } from "@/types/database";
 
 const input = "mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-slate-950 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100";
 
@@ -21,11 +21,15 @@ export function BusinessProfileForm({
   fallbackName,
   fallbackEmail,
   onboarding = false,
+  categories = [],
+  selectedCategoryIds = [],
 }: {
   profile?: BusinessProfile | null;
   fallbackName: string;
   fallbackEmail: string;
   onboarding?: boolean;
+  categories?: CatalogCategory[];
+  selectedCategoryIds?: string[];
 }) {
   const [state, action] = useActionState(saveBusinessProfileAction, initialActionState);
   const initialCountry = (profile?.country_code ?? "OTHER") as SupportedCountry;
@@ -81,6 +85,20 @@ export function BusinessProfileForm({
           <input className={input} defaultValue={profile?.default_margin_percentage ?? 40} min="0" name="defaultMarginPercentage" step="0.01" type="number" />
         </label>
       </div>
+      {categories.length ? (
+        <fieldset className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4">
+          <legend className="px-1 text-sm font-semibold text-slate-800">¿Qué tipos de trabajo realizas?</legend>
+          <p className="mt-1 text-xs leading-5 text-slate-500">Puedes elegir varios. DecoQuote los priorizará al mostrar el catálogo; siempre podrás ver todo.</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {categories.map((category) => (
+              <label className="flex min-h-11 items-center gap-3 rounded-xl border border-violet-100 bg-white px-3 text-sm font-medium text-slate-700" key={category.id}>
+                <input className="size-4 accent-violet-600" defaultChecked={selectedCategoryIds.includes(category.id)} name="businessCategoryIds" type="checkbox" value={category.id} />
+                {category.name}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
       <label className="block text-sm font-medium text-slate-700">Dirección
         <input className={input} defaultValue={profile?.address ?? ""} name="address" />
       </label>

@@ -1,5 +1,10 @@
 import type {
   BusinessProfile,
+  CatalogCategory,
+  CatalogItem,
+  CatalogItemOverride,
+  CatalogItemType,
+  CatalogSubcategory,
   Customer,
   MarginType,
   Material,
@@ -13,6 +18,11 @@ import type { QuoteCalculation } from "@/lib/decoquote/calculations";
 
 export type {
   BusinessProfile,
+  CatalogCategory,
+  CatalogItem,
+  CatalogItemOverride,
+  CatalogItemType,
+  CatalogSubcategory,
   Customer,
   Material,
   Quote,
@@ -22,6 +32,22 @@ export type {
   QuoteStatus,
   Service,
 };
+
+export interface CatalogItemView {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  itemType: CatalogItemType;
+  unit: string;
+  defaultCostCents: number;
+  defaultPriceCents: number;
+  searchKeywords: string;
+  hidden: boolean;
+  categoryIds: string[];
+  categoryNames: string[];
+  subcategoryNames: string[];
+}
 
 export interface QuoteEditorItem {
   id: string;

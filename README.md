@@ -22,7 +22,8 @@ La autenticación, billing, planes, usage, webhooks y panel admin del Starter se
 - Logo del negocio en Supabase Storage, visible en las propuestas PDF.
 - País y moneda de trabajo: USD/EUR siempre disponibles y moneda local para Argentina, México, Chile y Colombia.
 - Clientes con búsqueda, edición y archivado lógico.
-- Servicios y materiales reutilizables.
+- Catálogo personal de servicios y materiales reutilizables.
+- Catálogo base multi-nicho con costos y precios personalizados por usuaria.
 - Creador de cotizaciones con líneas dinámicas y conceptos personalizados.
 - Historial, filtros, detalle, edición, cambio de estado y duplicado.
 - PDF comercial sin costo interno, margen ni ganancia.
@@ -76,6 +77,17 @@ Tablas DecoQuote:
 - `quotes`
 - `quote_items`
 - `quote_counters` (contador anual interno)
+
+Catálogo creativo global:
+
+- `catalog_categories` y `catalog_subcategories`: taxonomía extensible.
+- `catalog_items`: elementos base sin propietario.
+- `catalog_item_categories`: relación many-to-many sin duplicar conceptos.
+- `business_catalog_categories`: múltiples rubros elegidos por usuaria.
+- `catalog_item_overrides`: costo, precio, unidad y visibilidad privados.
+
+Las tablas personales `services` y `materials` continúan siendo la fuente de
+los elementos propios. La migración no altera sus filas ni importes existentes.
 
 `quotes` y `quote_items` guardan importes con sufijo `_cents`. `customers.deleted_at` implementa archivado lógico. El número se genera en PostgreSQL con formato `DQ-YYYY-000001`.
 
@@ -138,6 +150,7 @@ supabase/migrations/202608100001_business_logo_storage.sql
 supabase/migrations/202608100002_business_country.sql
 supabase/migrations/202608110001_hotmart_multi_plan.sql
 supabase/migrations/202608110002_decoquote_plans.sql
+supabase/migrations/202608120001_global_creative_catalog.sql
 ```
 
 Con Supabase CLI:
@@ -166,6 +179,10 @@ price: 19.99 USD / month
 ```
 
 `-1` significa uso ilimitado.
+
+La migración global crea 10 categorías, 27 subcategorías y 237 ítems base. Los
+importes parten en cero; cada negocio define sus valores mediante overrides RLS.
+Consulta `docs/global-creative-catalog-migration.md` para validación y rollback.
 
 Después de aplicarla, usa Table Editor para revisar las seis tablas de producto.
 

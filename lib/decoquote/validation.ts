@@ -52,20 +52,28 @@ export const serviceSchema = z.object({
   description: optionalText(1000),
   defaultCost: money,
   defaultPrice: money,
+  itemType: z.enum(["service", "product", "labor", "equipment", "transport", "other"]),
+  unit: z.string().trim().min(1, "Selecciona una unidad.").max(40),
+  categoryId: z.string().uuid().nullable(),
+  subcategoryId: z.string().uuid().nullable(),
   active: z.boolean(),
 });
 
 export const materialSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(2, "Ingresa el nombre del material.").max(160),
+  description: optionalText(1000),
   unit: z.string().trim().min(1, "Selecciona una unidad.").max(40),
   unitCost: money,
+  defaultPrice: money,
+  categoryId: z.string().uuid().nullable(),
+  subcategoryId: z.string().uuid().nullable(),
   active: z.boolean(),
 });
 
 export const quoteEditorItemSchema = z.object({
   id: z.string().min(1),
-  itemType: z.enum(["service", "material", "custom"]),
+  itemType: z.enum(["service", "material", "product", "labor", "equipment", "transport", "other", "custom"]),
   referenceId: z.string().uuid().nullable(),
   name: z.string().trim().min(1, "Cada línea necesita un nombre.").max(200),
   description: z.string().trim().max(1000),
@@ -73,6 +81,14 @@ export const quoteEditorItemSchema = z.object({
   unit: z.string().trim().min(1).max(40),
   unitCostCents: z.number().int().min(0),
   unitPriceCents: z.number().int().min(0),
+});
+
+export const catalogOverrideSchema = z.object({
+  catalogItemId: z.string().uuid(),
+  unit: z.string().trim().min(1, "Selecciona una unidad.").max(40),
+  defaultCost: money,
+  defaultPrice: money,
+  hidden: z.boolean(),
 });
 
 export const quoteEditorSchema = z.object({
