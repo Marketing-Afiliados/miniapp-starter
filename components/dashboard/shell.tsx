@@ -43,8 +43,8 @@ export function DashboardShell({ children, user, profile, admin = false }: Dashb
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 overflow-hidden border-r border-violet-100 bg-gradient-to-b from-[#fffafd] via-[#fbf8ff] to-[#f8fbff] p-5 lg:flex lg:flex-col">
         <span className="deco-float absolute -right-8 top-16 size-24 rounded-full bg-rose-100/70" />
         <span className="deco-float-delayed absolute -left-10 bottom-40 size-24 rounded-full bg-sky-100/70" />
-        <div className="relative px-2 py-2"><Brand href={admin ? "/admin" : "/dashboard"} /></div>
-        <div className="relative mt-8 flex-1">
+        <div className="relative shrink-0 px-2 py-2"><Brand href={admin ? "/admin" : "/dashboard"} /></div>
+        <div className="relative mt-8 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 pr-1">
           <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.22em] text-[#a092a9]">{admin ? "Administración" : "Mi estudio creativo"}</p>
           <DashboardNavigation admin={admin} showAdminLink={profile?.role === "admin"} />
           {!admin ? (
@@ -53,7 +53,7 @@ export function DashboardShell({ children, user, profile, admin = false }: Dashb
             </Link>
           ) : null}
         </div>
-        <div className="relative rounded-[22px] border border-white/80 bg-white/75 p-3 shadow-[0_14px_35px_rgb(80_56_94_/_0.08)] backdrop-blur">
+        <div className="relative mt-4 shrink-0 rounded-[22px] border border-white/80 bg-white/75 p-3 shadow-[0_14px_35px_rgb(80_56_94_/_0.08)] backdrop-blur">
           <div className="flex items-center gap-3">
             <span className="grid size-11 shrink-0 place-items-center rounded-[15px] bg-gradient-to-br from-violet-500 to-fuchsia-400 text-sm font-bold text-white shadow-md shadow-violet-200">{initials}</span>
             <div className="min-w-0 flex-1">

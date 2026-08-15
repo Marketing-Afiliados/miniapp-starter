@@ -1,9 +1,25 @@
 import { writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { generateQuotePdf } from "./pdf";
+import { fitImageWithin, generateQuotePdf } from "./pdf";
 import type { BusinessProfile, Customer, Quote, QuoteItem } from "@/types/database";
 
 describe("generateQuotePdf", () => {
+  it("ajusta logos horizontales sin deformar su proporcion", () => {
+    const fit = fitImageWithin(1200, 300, 108, 48);
+    expect(fit.width).toBe(108);
+    expect(fit.height).toBe(27);
+    expect(fit.xOffset).toBe(0);
+    expect(fit.yOffset).toBe(10.5);
+  });
+
+  it("ajusta logos verticales sin deformar su proporcion", () => {
+    const fit = fitImageWithin(300, 900, 108, 48);
+    expect(fit.width).toBe(16);
+    expect(fit.height).toBe(48);
+    expect(fit.xOffset).toBe(46);
+    expect(fit.yOffset).toBe(0);
+  });
+
   it("genera un PDF comercial válido sin etiquetas privadas", async () => {
     const now = new Date().toISOString();
     const business = { id: "b", user_id: "u", business_name: "Magics Eventos", owner_name: "Andrea López", email: "hola@example.com", phone: null, whatsapp: "+593999999999", instagram: "@magics", logo_url: null, address: "Quito", country_code: "EC", currency: "USD", default_margin_percentage: 40, default_terms: null, created_at: now, updated_at: now } as BusinessProfile;
