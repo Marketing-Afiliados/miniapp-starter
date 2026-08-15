@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type IconName = "home" | "quote" | "customers" | "services" | "materials" | "profit" | "plan" | "account" | "usage" | "webhook" | "back";
+type IconName = "home" | "calculator" | "quote" | "customers" | "services" | "materials" | "profit" | "plan" | "account" | "usage" | "webhook" | "back";
 
 const userItems: { href: string; label: string; icon: IconName; accent: string }[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", accent: "bg-violet-100 text-violet-700" },
+  { href: "/dashboard/calculator", label: "Calculadora rápida", icon: "calculator", accent: "bg-fuchsia-100 text-fuchsia-700" },
   { href: "/dashboard/quotes", label: "Cotizaciones", icon: "quote", accent: "bg-rose-100 text-rose-700" },
   { href: "/dashboard/customers", label: "Clientes", icon: "customers", accent: "bg-sky-100 text-sky-700" },
   { href: "/dashboard/services", label: "Servicios", icon: "services", accent: "bg-amber-100 text-amber-700" },
@@ -29,6 +30,7 @@ function NavIcon({ name }: { name: IconName }) {
   return (
     <svg aria-hidden="true" className="size-[18px]" viewBox="0 0 24 24">
       {name === "home" ? <><path {...common} d="m3 11 9-8 9 8" /><path {...common} d="M5 10v10h14V10M9 20v-6h6v6" /></> : null}
+      {name === "calculator" ? <><rect {...common} height="18" rx="2" width="16" x="4" y="3" /><path {...common} d="M7 7h10M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01" /></> : null}
       {name === "quote" ? <><path {...common} d="M6 3h9l3 3v15H6z" /><path {...common} d="M9 10h6M9 14h6M9 18h4" /></> : null}
       {name === "customers" ? <><circle {...common} cx="9" cy="8" r="3" /><path {...common} d="M3.5 19c.5-4 2.5-6 5.5-6s5 2 5.5 6M16 6.5a3 3 0 0 1 0 5.8M16 14c2.5.4 4 2.1 4.5 5" /></> : null}
       {name === "services" ? <><path {...common} d="m12 3 1.6 4.2L18 9l-4.4 1.8L12 15l-1.6-4.2L6 9l4.4-1.8z" /><path {...common} d="m18.5 15 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" /></> : null}
