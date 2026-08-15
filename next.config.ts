@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      // The logo itself is limited to 2 MB in the domain validator. The extra
+      // room is for multipart/form-data headers and the remaining profile fields.
+      bodySizeLimit: "3mb",
+    },
+  },
   async headers() {
     return [
       {

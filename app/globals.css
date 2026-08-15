@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #fffafc;
+  --foreground: #352b3d;
+  --lavender: #8b5cf6;
+  --lavender-soft: #eee7ff;
+  --blush: #f8dce8;
+  --peach: #ffe1c7;
+  --mint: #d8f3e5;
+  --sky: #dceeff;
+  --cream: #fff9ef;
   color-scheme: light;
 }
 
@@ -17,7 +24,10 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at 7% 2%, rgb(248 220 232 / 45%), transparent 24rem),
+    radial-gradient(circle at 94% 14%, rgb(220 238 255 / 55%), transparent 28rem),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-app), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
@@ -39,6 +49,158 @@ textarea {
 }
 
 ::selection {
-  background: #c7d2fe;
-  color: #1e1b4b;
+  background: #ddd0ff;
+  color: #352b3d;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(139 92 246 / 35%);
+  outline-offset: 3px;
+}
+
+.dashboard-canvas {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 82% 8%, rgb(255 225 199 / 34%), transparent 22rem),
+    radial-gradient(circle at 26% 92%, rgb(216 243 229 / 36%), transparent 25rem),
+    linear-gradient(145deg, #fffafd 0%, #faf8ff 48%, #f8fbff 100%);
+}
+
+.dashboard-canvas::before {
+  position: fixed;
+  z-index: -1;
+  top: 5.5rem;
+  right: 3.5rem;
+  width: 7rem;
+  height: 7rem;
+  border: 1px dashed rgb(139 92 246 / 18%);
+  border-radius: 999px;
+  content: "";
+  pointer-events: none;
+}
+
+.dashboard-content input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.dashboard-content select,
+.dashboard-content textarea {
+  border-color: #e9e1ee;
+  background-color: rgb(255 255 255 / 88%);
+  box-shadow: 0 1px 0 rgb(80 58 93 / 3%);
+}
+
+.dashboard-content input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+.dashboard-content select:focus,
+.dashboard-content textarea:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 4px rgb(221 208 255 / 55%);
+}
+
+.dashboard-content :where(article, section, aside).border-slate-200.bg-white {
+  border-color: rgb(226 215 235 / 78%);
+  box-shadow: 0 16px 48px rgb(79 52 94 / 7%);
+}
+
+.dashboard-content :is(a, button).bg-violet-600 {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  box-shadow: 0 10px 24px rgb(139 92 246 / 20%);
+}
+
+.dashboard-content :is(a, button).bg-slate-950 {
+  background: #403448;
+}
+
+.app-card {
+  border: 1px solid rgb(226 215 235 / 78%);
+  border-radius: 1.5rem;
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 18px 55px rgb(79 52 94 / 7%);
+  backdrop-filter: blur(12px);
+}
+
+.app-card-soft {
+  border: 1px solid rgb(226 215 235 / 68%);
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, rgb(255 255 255 / 90%), rgb(250 247 255 / 88%));
+  box-shadow: 0 16px 45px rgb(79 52 94 / 6%);
+}
+
+.pastel-primary {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+  box-shadow: 0 12px 28px rgb(139 92 246 / 24%);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.pastel-primary:hover {
+  filter: saturate(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgb(139 92 246 / 30%);
+}
+
+.pastel-secondary {
+  border: 1px solid #e7dced;
+  background: rgb(255 255 255 / 82%);
+  color: #54465e;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.pastel-secondary:hover {
+  border-color: #cbb9e7;
+  background: white;
+  transform: translateY(-1px);
+}
+
+.deco-float {
+  animation: deco-float 5.5s ease-in-out infinite;
+}
+
+.deco-float-delayed {
+  animation: deco-float 6.5s ease-in-out -2s infinite;
+}
+
+.deco-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.deco-sheen::after {
+  position: absolute;
+  inset: -80% auto -80% -50%;
+  width: 34%;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 38%), transparent);
+  transform: rotate(14deg);
+  animation: deco-sheen 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes deco-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes deco-sheen {
+  0%,
+  70% {
+    left: -55%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

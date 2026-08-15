@@ -11,6 +11,7 @@ import {
   type SupportedCountry,
   type SupportedCurrency,
 } from "@/lib/decoquote/constants";
+import { validateBusinessLogoMetadata } from "@/lib/decoquote/logo";
 import { initialActionState } from "@/types/action-state";
 import type { BusinessProfile, CatalogCategory } from "@/types/database";
 
@@ -35,6 +36,7 @@ export function BusinessProfileForm({
   const initialCountry = (profile?.country_code ?? "OTHER") as SupportedCountry;
   const [countryCode, setCountryCode] = useState<SupportedCountry>(initialCountry);
   const [currency, setCurrency] = useState<SupportedCurrency>((profile?.currency ?? "USD") as SupportedCurrency);
+  const [logoError, setLogoError] = useState<string>();
   const currencyOptions = useMemo(() => getCurrencyOptionsForCountry(countryCode), [countryCode]);
 
   function changeCountry(nextCountry: SupportedCountry) {
@@ -45,8 +47,18 @@ export function BusinessProfileForm({
     }
   }
 
+  function validateLogoSelection(file: File | undefined) {
+    setLogoError(file ? validateBusinessLogoMetadata(file) : undefined);
+  }
+
   return (
-    <form action={action} className="space-y-6">
+    <form
+      action={action}
+      className="space-y-6"
+      onSubmit={(event) => {
+        if (logoError) event.preventDefault();
+      }}
+    >
       <input name="intent" type="hidden" value={onboarding ? "onboarding" : "settings"} />
       <FormFeedback state={state} />
       <div className="grid gap-5 sm:grid-cols-2">
@@ -114,10 +126,16 @@ export function BusinessProfileForm({
           </div>
           <div className="min-w-0 flex-1">
             <label className="block text-sm font-medium text-slate-700">Logo del negocio <span className="font-normal text-slate-400">(opcional)</span>
-              <input accept="image/png,image/jpeg" className={`${input} py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-1.5 file:font-semibold file:text-violet-700`} name="logoFile" type="file" />
+              <input
+                accept="image/png,image/jpeg"
+                className={`${input} py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-1.5 file:font-semibold file:text-violet-700`}
+                name="logoFile"
+                onChange={(event) => validateLogoSelection(event.target.files?.[0])}
+                type="file"
+              />
             </label>
             <p className="mt-1 text-xs text-slate-500">PNG o JPG, máximo 2 MB. Se mostrará en tus propuestas PDF.</p>
-            {state.fieldErrors?.logoFile ? <span className="mt-1 block text-xs text-rose-600">{state.fieldErrors.logoFile}</span> : null}
+            {logoError || state.fieldErrors?.logoFile ? <span className="mt-1 block text-xs text-rose-600">{logoError ?? state.fieldErrors?.logoFile}</span> : null}
             {profile?.logo_url ? <label className="mt-3 flex items-center gap-2 text-xs font-medium text-slate-600"><input className="size-4 accent-violet-600" name="removeLogo" type="checkbox" />Eliminar el logo actual</label> : null}
           </div>
         </div>

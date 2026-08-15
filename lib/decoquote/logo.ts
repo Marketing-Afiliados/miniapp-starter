@@ -14,6 +14,17 @@ export interface BusinessLogoValidation {
   error?: string;
 }
 
+export function validateBusinessLogoMetadata(
+  file: Pick<File, "size" | "type">,
+): string | undefined {
+  if (file.size > BUSINESS_LOGO_MAX_BYTES) {
+    return "El logo no puede superar 2 MB.";
+  }
+  if (!(file.type in LOGO_EXTENSIONS)) {
+    return "Carga una imagen PNG o JPG.";
+  }
+}
+
 function hasValidSignature(bytes: Uint8Array, mimeType: LogoMimeType) {
   if (mimeType === "image/png") {
     const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -26,11 +37,9 @@ export async function validateBusinessLogo(value: FormDataEntryValue | null): Pr
   if (!(value instanceof File) || value.size === 0) {
     return { file: null, extension: null };
   }
-  if (value.size > BUSINESS_LOGO_MAX_BYTES) {
-    return { file: null, extension: null, error: "El logo no puede superar 2 MB." };
-  }
-  if (!(value.type in LOGO_EXTENSIONS)) {
-    return { file: null, extension: null, error: "Carga una imagen PNG o JPG." };
+  const metadataError = validateBusinessLogoMetadata(value);
+  if (metadataError) {
+    return { file: null, extension: null, error: metadataError };
   }
   const mimeType = value.type as LogoMimeType;
   const header = new Uint8Array(await value.slice(0, 12).arrayBuffer());

@@ -12,8 +12,8 @@ import { initialActionState } from "@/types/action-state";
 import type { CatalogCategory, Customer, Material, Service } from "@/types/database";
 import type { CatalogItemView, QuoteEditorItem, QuoteEditorPayload } from "@/types/decoquote";
 
-const input = "mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100";
-const card = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6";
+const input = "mt-1.5 min-h-11 w-full rounded-xl border border-[#e8dfec] bg-white/90 px-3 text-[#403448] outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100";
+const card = "app-card p-5 sm:p-6";
 const newId = () => typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now() + Math.random());
 
 function emptyItem(): QuoteEditorItem {
@@ -134,7 +134,7 @@ export function QuoteEditor({
   }
 
   return (
-    <form action={action}>
+    <form action={action} className="quote-editor">
       {quoteId ? <input name="quoteId" type="hidden" value={quoteId} /> : null}
       <input name="payload" type="hidden" value={JSON.stringify(payload)} />
       <div className="mb-5"><FormFeedback state={state} /></div>
@@ -165,7 +165,7 @@ export function QuoteEditor({
 
           <section className={card}>
             <h2 className="text-lg font-semibold text-slate-950">3. Servicios y materiales</h2>
-            <div className="mt-4 rounded-xl border border-violet-100 bg-violet-50/40 p-4">
+            <div className="mt-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/80 via-rose-50/40 to-amber-50/50 p-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">Tipo de trabajo
                   <select className={input} disabled={showAllCatalog} onChange={(event) => setWorkCategoryId(event.target.value)} value={workCategoryId}>
@@ -192,7 +192,7 @@ export function QuoteEditor({
             </div>
             <div className="mt-5 space-y-4">
               {items.map((item, index) => (
-                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4" key={item.id}>
+                <article className="rounded-2xl border border-[#eadff0] bg-gradient-to-br from-white to-[#fdf9ff] p-4 shadow-sm" key={item.id}>
                   <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-wide text-violet-600">Concepto {index + 1}</p><button className="text-xs font-semibold text-rose-600" disabled={items.length === 1} onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))} type="button">Quitar</button></div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
                     <label className="text-xs font-medium text-slate-600 sm:col-span-2 lg:col-span-3">Nombre<input className={input} onChange={(e) => updateItem(item.id, { name: e.target.value })} required value={item.name} /></label>
@@ -237,8 +237,10 @@ export function QuoteEditor({
           </section>
         </div>
 
-        <aside className="rounded-2xl bg-slate-950 p-5 text-white shadow-xl xl:sticky xl:top-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-violet-300">Resumen en tiempo real</p>
+        <aside className="deco-sheen relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#3f3150] via-[#32283c] to-[#4b345e] p-5 text-white shadow-2xl shadow-violet-200/40 xl:sticky xl:top-8">
+          <span className="absolute -right-10 -top-10 size-28 rounded-full bg-rose-300/15" />
+          <span className="absolute -bottom-12 -left-10 size-28 rounded-full bg-sky-300/10" />
+          <p className="relative text-xs font-bold uppercase tracking-[0.18em] text-violet-200">Resumen en tiempo real</p>
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex justify-between"><dt className="text-slate-300">Servicios/materiales</dt><dd>{formatCurrency(calculation.itemsCostCents, currency)}</dd></div>
             <div className="flex justify-between"><dt className="text-slate-300">Mano de obra</dt><dd>{formatCurrency(calculation.laborCostCents, currency)}</dd></div>
@@ -247,8 +249,8 @@ export function QuoteEditor({
             <div className="flex justify-between border-t border-slate-700 pt-3 font-semibold"><dt>Costo total</dt><dd>{formatCurrency(calculation.totalCostCents, currency)}</dd></div>
             <div className="flex justify-between"><dt className="text-slate-300">Ganancia estimada</dt><dd className={calculation.hasLoss ? "text-rose-300" : "text-emerald-300"}>{formatCurrency(calculation.estimatedProfitCents, currency)}</dd></div>
           </dl>
-          <div className="mt-5 rounded-xl bg-violet-500 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-violet-100">Precio recomendado</p><p className="mt-1 text-3xl font-semibold">{formatCurrency(calculation.recommendedPriceCents, currency)}</p>{finalPriceCents !== null ? <p className="mt-2 text-sm text-violet-100">Precio final: {formatCurrency(calculation.finalPriceCents, currency)}</p> : null}</div>
-          <div className="mt-4 rounded-xl border border-slate-700 bg-slate-900 p-4">
+          <div className="relative mt-5 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 p-4 shadow-lg shadow-violet-950/20"><p className="text-xs font-bold uppercase tracking-wide text-violet-100">Precio recomendado</p><p className="mt-1 text-3xl font-bold">{formatCurrency(calculation.recommendedPriceCents, currency)}</p>{finalPriceCents !== null ? <p className="mt-2 text-sm text-violet-100">Precio final: {formatCurrency(calculation.finalPriceCents, currency)}</p> : null}</div>
+          <div className="relative mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-wide text-violet-300">Desglose comercial del PDF</p>
             <div className="mt-3 space-y-2 text-xs">
               {commercialPreview.map((line) => (

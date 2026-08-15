@@ -10,7 +10,7 @@ export function DataTable({
   colSpan: number;
 }) {
   return (
-    <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="app-card mt-8 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] text-left text-sm">
           {children}
@@ -25,5 +25,5 @@ export function DataTable({
   );
 }
 
-export const tableHeadClass = "bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500";
-export const tableCellClass = "border-t border-slate-100 px-6 py-4 align-middle text-slate-600";
+export const tableHeadClass = "bg-gradient-to-r from-violet-50/90 via-rose-50/60 to-amber-50/60 text-xs font-bold uppercase tracking-wider text-[#74667d]";
+export const tableCellClass = "border-t border-[#eee7f1] px-6 py-4 align-middle text-[#65586d]";

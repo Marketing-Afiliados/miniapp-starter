@@ -6,7 +6,7 @@ export function SubmitButton({ children, pendingLabel = "Guardando…" }: { chil
   const { pending } = useFormStatus();
   return (
     <button
-      className="inline-flex min-h-11 items-center justify-center rounded-xl bg-violet-600 px-5 text-sm font-semibold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-700 disabled:cursor-wait disabled:opacity-60"
+      className="pastel-primary deco-sheen inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-bold disabled:cursor-wait disabled:opacity-60"
       disabled={pending}
       type="submit"
     >

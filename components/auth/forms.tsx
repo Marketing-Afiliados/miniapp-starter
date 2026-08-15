@@ -15,7 +15,7 @@ import {
 } from "@/types/auth-actions";
 
 const inputClass =
-  "mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100";
+  "mt-2 h-12 w-full rounded-xl border border-[#e8dfec] bg-white/90 px-4 text-[#352b3d] outline-none transition placeholder:text-[#aa9eb0] focus:border-violet-400 focus:ring-4 focus:ring-violet-100";
 
 function Feedback({ state }: { state: AuthActionState }) {
   if (!state.message) return null;
@@ -37,7 +37,7 @@ function ErrorText({ children }: { children?: string }) {
 function SubmitButton({ pending, children }: { pending: boolean; children: string }) {
   return (
     <button
-      className="flex h-12 w-full items-center justify-center rounded-xl bg-indigo-600 px-5 font-semibold text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+      className="pastel-primary deco-sheen flex h-12 w-full items-center justify-center rounded-xl px-5 font-bold disabled:cursor-not-allowed disabled:opacity-60"
       disabled={pending}
       type="submit"
     >
@@ -59,7 +59,7 @@ export function LoginForm() {
       <label className="block text-sm font-medium text-slate-700" htmlFor="password">
         <span className="flex items-center justify-between">
           Contraseña
-          <Link className="font-medium text-indigo-600 hover:text-indigo-700" href="/forgot-password">
+          <Link className="font-semibold text-violet-600 hover:text-violet-700" href="/forgot-password">
             ¿La olvidaste?
           </Link>
         </span>
