@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type IconName = "home" | "calculator" | "quote" | "customers" | "services" | "materials" | "profit" | "plan" | "account" | "usage" | "webhook" | "back";
+type IconName = "home" | "calculator" | "quote" | "customers" | "services" | "materials" | "profit" | "plan" | "account" | "support" | "usage" | "webhook" | "back";
 
 const userItems: { href: string; label: string; icon: IconName; accent: string }[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", accent: "bg-violet-100 text-violet-700" },
@@ -15,6 +15,7 @@ const userItems: { href: string; label: string; icon: IconName; accent: string }
   { href: "/dashboard/profitability", label: "Rentabilidad", icon: "profit", accent: "bg-fuchsia-100 text-fuchsia-700" },
   { href: "/dashboard/plan", label: "Mi plan", icon: "plan", accent: "bg-orange-100 text-orange-700" },
   { href: "/dashboard/account", label: "Mi cuenta", icon: "account", accent: "bg-indigo-100 text-indigo-700" },
+  { href: "/dashboard/support", label: "Soporte", icon: "support", accent: "bg-cyan-100 text-cyan-700" },
 ];
 
 const adminItems: { href: string; label: string; icon: IconName; accent: string }[] = [
@@ -38,6 +39,7 @@ function NavIcon({ name }: { name: IconName }) {
       {name === "profit" ? <><path {...common} d="M4 19V9M10 19V5M16 19v-7M3 19h18" /><path {...common} d="m14 6 3-3 3 3" /></> : null}
       {name === "plan" ? <><path {...common} d="m12 3 2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9z" /></> : null}
       {name === "account" ? <><circle {...common} cx="12" cy="8" r="4" /><path {...common} d="M4.5 21c.6-5 3.1-7 7.5-7s6.9 2 7.5 7" /></> : null}
+      {name === "support" ? <><path {...common} d="M4 13a8 8 0 1 1 16 0" /><path {...common} d="M4 13v4a2 2 0 0 0 2 2h1v-7H6a2 2 0 0 0-2 1ZM20 13v4a2 2 0 0 1-2 2h-1v-7h1a2 2 0 0 1 2 1ZM17 19c-1 1.3-2.7 2-5 2" /></> : null}
       {name === "usage" ? <><path {...common} d="M5 20V10M12 20V4M19 20v-7" /></> : null}
       {name === "webhook" ? <><path {...common} d="M8 7a4 4 0 1 1 7.6 1.7L19 14" /><path {...common} d="M16 14h3v-3M16 17a4 4 0 1 1-7.6-1.7L5 10" /><path {...common} d="M8 10H5v3" /></> : null}
       {name === "back" ? <><path {...common} d="m15 18-6-6 6-6" /></> : null}
