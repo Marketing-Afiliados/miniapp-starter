@@ -61,6 +61,7 @@ export function buildCatalogItems(
       defaultCostCents: override?.default_cost_cents ?? item.default_cost_cents,
       defaultPriceCents: override?.default_price_cents ?? item.default_price_cents,
       searchKeywords: item.search_keywords,
+      personalized: Boolean(override),
       hidden: override?.hidden ?? false,
       categoryIds: [...new Set(itemRelations.map((entry) => entry.category_id))],
       categoryNames: [...new Set(itemRelations.map((entry) => categoryById.get(entry.category_id)?.name).filter(Boolean) as string[])],
@@ -93,4 +94,15 @@ export function filterCatalogItems(items: CatalogItemView[], filter: CatalogFilt
       if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
       return a.name.localeCompare(b.name, "es");
     });
+}
+
+export function filterPersonalizedCatalogItems(
+  items: CatalogItemView[],
+  filter: Pick<CatalogFilter, "query" | "itemTypes">,
+): CatalogItemView[] {
+  return filterCatalogItems(items, {
+    ...filter,
+    showAll: true,
+    includeHidden: true,
+  }).filter((item) => item.personalized);
 }

@@ -53,7 +53,10 @@ export function CatalogBrowser({
           <article className={`rounded-2xl border bg-white p-5 shadow-sm ${item.hidden ? "border-slate-100 opacity-60" : "border-slate-200"}`} key={item.id}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">{CATALOG_ITEM_TYPE_LABELS[item.itemType]}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">{CATALOG_ITEM_TYPE_LABELS[item.itemType]}</p>
+                  {item.personalized ? <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">Personalizado</span> : null}
+                </div>
                 <h3 className="mt-1 font-semibold text-slate-950">{item.name}</h3>
               </div>
               <span className="shrink-0 text-sm font-semibold text-violet-700">{formatCurrency(item.defaultPriceCents, currency)}</span>
@@ -61,7 +64,7 @@ export function CatalogBrowser({
             <p className="mt-2 text-xs leading-5 text-slate-500">{item.categoryNames.join(" · ")}{item.subcategoryNames.length ? ` / ${item.subcategoryNames.join(" · ")}` : ""}</p>
             <p className="mt-2 text-xs text-slate-500">Costo configurado: {formatCurrency(item.defaultCostCents, currency)} · por {item.unit}</p>
             <details className="mt-4">
-              <summary className="cursor-pointer list-none text-sm font-semibold text-violet-600">Personalizar para mi negocio</summary>
+              <summary className="cursor-pointer list-none text-sm font-semibold text-violet-600">{item.personalized ? "Editar personalización" : "Personalizar para mi negocio"}</summary>
               <div className="mt-4 border-t pt-4"><CatalogOverrideForm currency={currency} item={item} /></div>
             </details>
           </article>

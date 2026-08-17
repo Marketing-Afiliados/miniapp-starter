@@ -13,6 +13,7 @@ import {
 import { toCents } from "@/lib/decoquote/money";
 import {
   businessProfileSchema,
+  catalogOverrideIdSchema,
   catalogOverrideSchema,
   customerSchema,
   formValue,
@@ -307,6 +308,23 @@ export async function saveCatalogOverrideAction(
   revalidatePath("/dashboard/materials");
   revalidatePath("/dashboard/quotes/new");
   return { status: "success", message: data.hidden ? "Elemento ocultado." : "Valores personalizados." };
+}
+
+export async function resetCatalogOverrideAction(formData: FormData): Promise<void> {
+  const { user } = await requireUser();
+  const result = catalogOverrideIdSchema.safeParse({
+    catalogItemId: formValue(formData, "id"),
+  });
+  if (!result.success) return;
+  const supabase = await createClient();
+  await supabase
+    .from("catalog_item_overrides")
+    .delete()
+    .eq("catalog_item_id", result.data.catalogItemId)
+    .eq("user_id", user.id);
+  revalidatePath("/dashboard/services");
+  revalidatePath("/dashboard/materials");
+  revalidatePath("/dashboard/quotes/new");
 }
 
 export async function toggleMaterialAction(formData: FormData): Promise<void> {

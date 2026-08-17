@@ -43,6 +43,7 @@ export interface CatalogItemView {
   defaultCostCents: number;
   defaultPriceCents: number;
   searchKeywords: string;
+  personalized: boolean;
   hidden: boolean;
   categoryIds: string[];
   categoryNames: string[];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCatalogItems, filterCatalogItems } from "./catalog";
+import { buildCatalogItems, filterCatalogItems, filterPersonalizedCatalogItems } from "./catalog";
 import type {
   CatalogCategory,
   CatalogItem,
@@ -28,7 +28,16 @@ describe("catálogo global", () => {
     const overrides = [{ user_id: "user", catalog_item_id: "item-vinyl", unit: null, default_cost_cents: 250, default_price_cents: 500, hidden: false, created_at: timestamp, updated_at: timestamp }] satisfies CatalogItemOverride[];
     const [view] = buildCatalogItems(items, relations, categories, subcategories, overrides);
     expect(view.defaultCostCents).toBe(250);
+    expect(view.personalized).toBe(true);
     expect(items[0].default_cost_cents).toBe(0);
+  });
+
+  it("incluye solo personalizaciones en el catálogo del usuario", () => {
+    const overrides = [{ user_id: "user", catalog_item_id: "item-vinyl", unit: null, default_cost_cents: 250, default_price_cents: 500, hidden: true, created_at: timestamp, updated_at: timestamp }] satisfies CatalogItemOverride[];
+    const personalized = buildCatalogItems(items, relations, categories, subcategories, overrides);
+    const original = buildCatalogItems(items, relations, categories, subcategories, []);
+    expect(filterPersonalizedCatalogItems(personalized, { itemTypes: ["material"] })).toHaveLength(1);
+    expect(filterPersonalizedCatalogItems(original, { itemTypes: ["material"] })).toHaveLength(0);
   });
 
   it("busca sin depender de mayúsculas o acentos y por palabras relacionadas", () => {

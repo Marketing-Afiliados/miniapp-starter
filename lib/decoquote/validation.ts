@@ -91,6 +91,10 @@ export const catalogOverrideSchema = z.object({
   hidden: z.boolean(),
 });
 
+export const catalogOverrideIdSchema = z.object({
+  catalogItemId: z.string().uuid(),
+});
+
 export const quoteEditorSchema = z.object({
   customerId: z.string().uuid("Selecciona un cliente."),
   eventName: z.string().trim().min(2, "Ingresa el nombre del evento.").max(200),
