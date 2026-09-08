@@ -3,9 +3,10 @@
 ## Configuración aportada por el propietario
 
 - Checkout real: https://pay.hotmart.com/Y107492007M?off=ij6szo4g, guardado en HOTMART_CHECKOUT_URL local y en .env.example. Debe copiarse a Vercel; no se modificaron variables remotas.
-- Código de oferta: ij6szo4g (parámetro off del enlace).
+- Ofertas solicitadas por el propietario: ij6szo4g y wzs2qd3h. El checkout principal sigue usando ij6szo4g.
+- Registro preparado en supabase/configure-one-time-offers.sql con el producto 8466415 para ambas ofertas. No se ejecutó contra Supabase. El script rechaza marcadores sin completar y no cambia una base test a production.
 - El propietario confirma que habilitó en Hotmart el webhook https://decoquote.magicsglobes.com/api/webhooks/hotmart/one-time. Esto no acredita todavía recepción/procesamiento en el backend desplegado.
-- Falta confirmar el ID/ucode del producto enviado por Hotmart. Y107492007M es el identificador del enlace de pago; no se utiliza como product.id/ucode sin evidencia.
+- ID de producto proporcionado por el propietario: 8466415. Y107492007M corresponde al enlace de pago.
 - Pendientes de verificar: migración aplicada, despliegue de esta rama, Hottok/service role en Vercel, ambiente production, mapeo de oferta en Supabase y URL de condiciones publicadas. No compartir secretos en mensajes.
 - El propietario solicitó habilitar el checkout: ahora está activo por defecto en el código, con el enlace real centralizado. HOTMART_ONE_TIME_ENABLED=false permite desactivarlo explícitamente. La URL separada de condiciones es opcional para el botón; no se inventa una URL. No se realizó una compra real.
 - Diagnóstico posterior: el Supabase configurado localmente respondió 404/PGRST205 a una lectura de purchases (sin datos personales), mientras /login público respondió 200. Falta exponer/aplicar la migración en ese proyecto. El login ahora conserva sesión y acceso histórico/administrativo si el sistema de compras no está disponible; para nuevos compradores muestra estado de verificación temporalmente no disponible, sin inventar acceso.
@@ -106,7 +107,7 @@ values (true, 'test');
 insert into public.payment_offers (
   provider_product_id, provider_offer_code, environment, enabled, revoke_on_refund
 ) values (
-  'REEMPLAZAR_CON_UCODE_REAL', 'ij6szo4g', 'test', true, false
+  '8466415', 'ij6szo4g', 'test', true, false
 );
 commit;
 ```
