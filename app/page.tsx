@@ -1,3 +1,4 @@
+import { DECOQUOTE_PRODUCT, getCheckoutConfiguration } from "@/lib/decoquote/product";
 import Link from "next/link";
 
 import { Brand } from "@/components/ui/brand";
@@ -19,6 +20,8 @@ const steps = [
 ];
 
 const questions = [
+  ["¿Es una suscripción?", `No. Pagas USD $${(DECOQUOTE_PRODUCT.priceCents / 100).toFixed(2)} una sola vez e incluye licencia, soporte y actualizaciones gratis de por vida. Todas las funcionalidades están incluidas sin cuotas de uso.`],
+  ["¿Cómo activo mi acceso?", "Después de que Hotmart confirme el pago, crea tu cuenta con el correo de la compra y confírmalo, o inicia sesión si ya tienes cuenta. Si usaste otro correo, contacta a soporte."],
   ["¿Necesito crear un catálogo completo?", "No. Puedes agregar conceptos personalizados directamente en la cotización y guardar tu catálogo poco a poco."],
   ["¿El cliente verá mis costos?", "No. El PDF nunca muestra costos internos, margen ni ganancia. Esos datos permanecen en tu cuenta."],
   ["¿Funciona desde el teléfono?", "Sí. El flujo está diseñado para crear y revisar cotizaciones cómodamente desde el móvil."],
@@ -26,6 +29,7 @@ const questions = [
 ];
 
 export default function HomePage() {
+  const { checkoutUrl, termsUrl } = getCheckoutConfiguration(process.env);
   return (
     <main className="overflow-hidden bg-[#fffafd] text-[#352b3d]">
       <header className="sticky top-0 z-40 border-b border-violet-100/80 bg-white/82 backdrop-blur-xl">
@@ -34,7 +38,7 @@ export default function HomePage() {
           <nav className="hidden items-center gap-7 text-sm font-semibold text-[#74667d] md:flex">
             <a className="transition hover:text-violet-700" href="#como-funciona">Cómo funciona</a>
             <a className="transition hover:text-violet-700" href="#beneficios">Beneficios</a>
-            <a className="transition hover:text-violet-700" href="#precio">Planes</a>
+            <a className="transition hover:text-violet-700" href="#precio">Precio</a>
             <a className="transition hover:text-violet-700" href="#faq">FAQ</a>
           </nav>
           <div className="flex items-center gap-2">
@@ -53,15 +57,10 @@ export default function HomePage() {
             <span className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/85 px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] text-violet-700 shadow-sm">
               <span className="size-2 rounded-full bg-rose-300" /> Creado para negocios creativos
             </span>
-            <h1 className="mt-7 max-w-3xl text-4xl font-bold leading-[1.03] tracking-[-0.055em] sm:text-6xl lg:text-[68px]">
-              Cotiza tus decoraciones
-              <span className="block bg-gradient-to-r from-violet-600 via-fuchsia-500 to-rose-400 bg-clip-text text-transparent">sin improvisar.</span>
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[#74667d]">
-              Calcula materiales, mano de obra, transporte, margen y ganancia en minutos. Tan cuidado como cada detalle de tus eventos.
-            </p>
+            <h1 className="mt-6 text-4xl font-bold tracking-[-0.05em] text-[#352b3d] sm:text-6xl">¿Estás segura de que estás ganando dinero con cada pedido?</h1>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[#74667d]">Calcula tus costos, define tu ganancia y descubre cuánto deberías cobrar antes de enviar tu cotización.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link className="pastel-primary deco-sheen inline-flex min-h-13 items-center justify-center rounded-2xl px-6 font-bold" href="/register">Crear mi primera cotización <span className="ml-2">→</span></Link>
+              <Link className="pastel-primary deco-sheen inline-flex min-h-13 items-center justify-center rounded-2xl px-6 font-bold" href="#precio">QUIERO COTIZAR CON GANANCIA <span className="ml-2">→</span></Link>
               <a className="pastel-secondary inline-flex min-h-13 items-center justify-center rounded-2xl px-6 font-bold" href="#como-funciona">Ver cómo funciona</a>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-[#817489]">
@@ -161,29 +160,22 @@ export default function HomePage() {
       </section>
 
       <section className="px-5 py-20 sm:px-8 sm:py-24" id="precio">
-        <div className="mx-auto max-w-5xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Planes simples</p>
-          <h2 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-5xl">Elige el ritmo de tu negocio.</h2>
-          <p className="mx-auto mt-5 max-w-2xl text-[#74667d]">Ambos planes incluyen clientes ilimitados, historial y análisis de rentabilidad.</p>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            {DECOQUOTE_CONFIG.plans.map((plan) => (
-              <article className={`relative overflow-hidden rounded-[30px] border p-7 text-left shadow-xl sm:p-8 ${plan.featured ? "border-violet-300 bg-gradient-to-br from-[#4b3561] to-[#784fa0] text-white shadow-violet-200/70" : "border-violet-100 bg-white text-[#352b3d] shadow-violet-100/60"}`} key={plan.code}>
-                <span className={`absolute -right-10 -top-10 size-32 rounded-full ${plan.featured ? "bg-rose-300/20" : "bg-amber-100/70"}`} />
-                {plan.featured ? <span className="relative inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white">Mayor volumen</span> : <span className="relative inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700">Para comenzar</span>}
-                <p className={`relative mt-6 font-bold ${plan.featured ? "text-violet-100" : "text-violet-700"}`}>{plan.name}</p>
-                <p className="relative mt-3 text-5xl font-bold tracking-[-0.05em]">${plan.price}<span className={`text-base font-medium ${plan.featured ? "text-violet-200" : "text-[#8b7d93]"}`}> / {plan.billingInterval}</span></p>
-                <p className={`relative mt-4 min-h-12 text-sm leading-6 ${plan.featured ? "text-violet-100" : "text-[#74667d]"}`}>{plan.description}</p>
-                <ul className={`relative mt-7 space-y-3 text-sm font-medium ${plan.featured ? "text-white" : "text-[#5f5167]"}`}>
-                  <li>✓ {plan.limits.quotes_per_month === -1 ? "Cotizaciones ilimitadas" : `${plan.limits.quotes_per_month} cotizaciones al mes`}</li>
-                  <li>✓ {plan.limits.pdf_generations_per_month === -1 ? "PDFs ilimitados" : `${plan.limits.pdf_generations_per_month} PDFs al mes`}</li>
-                  <li>✓ Clientes ilimitados</li>
-                  <li>✓ Historial y rentabilidad</li>
-                </ul>
-                <Link className={`relative mt-8 flex min-h-12 items-center justify-center rounded-2xl font-bold transition hover:-translate-y-0.5 ${plan.featured ? "bg-white text-violet-700 shadow-lg" : "pastel-primary"}`} href={plan.checkoutUrl}>Elegir {plan.name.replace("DecoQuote ", "")}</Link>
-              </article>
-            ))}
-          </div>
-          <p className="mt-6 text-xs text-[#9a8ea1]">Compra segura procesada por Hotmart.</p>
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Una app para tu negocio creativo</p>
+          <h2 className="mt-4 text-3xl font-bold sm:text-5xl">{DECOQUOTE_PRODUCT.name}</h2>
+          <article className="relative mt-10 overflow-hidden rounded-[30px] border border-violet-200 bg-gradient-to-br from-[#4b3561] to-[#784fa0] p-8 text-white shadow-xl shadow-violet-200/60">
+            <p className="font-bold text-violet-100">Pago único</p>
+            <p className="mt-4 text-6xl font-bold">${(DECOQUOTE_PRODUCT.priceCents / 100).toFixed(2)} <span className="text-lg">{DECOQUOTE_PRODUCT.currency}</span></p>
+            <p className="mt-4 text-violet-100">Un solo pago. Sin suscripción ni renovación automática.</p>
+            <ul className="mt-8 space-y-3 text-left">
+              {[DECOQUOTE_PRODUCT.license, DECOQUOTE_PRODUCT.features, DECOQUOTE_PRODUCT.support, DECOQUOTE_PRODUCT.updates, "Cotizaciones y PDF sin cuotas de uso", "Clientes, materiales, servicios, catálogos y rentabilidad"].map(benefit => <li key={benefit}>✓ {benefit}</li>)}
+            </ul>
+            {checkoutUrl ? <a className="mt-8 flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 font-bold text-violet-700" href={checkoutUrl}>ADQUIERE TU APP</a> : <><button className="mt-8 min-h-12 w-full rounded-2xl bg-white/20 px-5 font-bold" disabled>Compra disponible próximamente</button><p className="mt-3 text-sm text-violet-100">Estamos preparando el acceso a la nueva oferta.</p></>}
+            <p className="mt-5 text-sm text-violet-100">Haz clic en Más información para conocer cómo funciona.</p>
+            <a className="mt-2 inline-block font-bold underline" href="#como-funciona">Más información</a>
+            {termsUrl ? <p className="mt-4 text-sm"><a className="underline" href={termsUrl}>Condiciones comerciales</a></p> : null}
+          </article>
+          <p className="mt-5 text-sm text-[#74667d]">¿Ya compraste? <Link className="font-bold text-violet-700" href="/login">Ingresa con el correo de tu compra.</Link></p>
         </div>
       </section>
 
@@ -206,9 +198,9 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[36px] bg-gradient-to-br from-violet-600 via-fuchsia-500 to-rose-400 px-6 py-14 text-center text-white shadow-2xl shadow-violet-200 sm:px-12">
           <span className="deco-float absolute -left-8 -top-8 size-32 rounded-full bg-white/10" />
           <span className="deco-float-delayed absolute -bottom-14 -right-8 size-40 rounded-full bg-amber-200/20" />
-          <h2 className="relative text-3xl font-bold tracking-[-0.04em] sm:text-5xl">Cotiza con claridad. Crea con libertad.</h2>
+          <h2 className="relative text-3xl font-bold tracking-[-0.04em] sm:text-5xl">Cotiza mejor. Gana con claridad.</h2>
           <p className="relative mx-auto mt-5 max-w-2xl text-violet-50">{DECOQUOTE_CONFIG.tagline}</p>
-          <Link className="relative mt-8 inline-flex min-h-13 items-center rounded-2xl bg-white px-7 font-bold text-violet-700 shadow-lg transition hover:-translate-y-1" href="/register">Crear mi cuenta <span className="ml-2">→</span></Link>
+          <Link className="relative mt-8 inline-flex min-h-13 items-center rounded-2xl bg-white px-7 font-bold text-violet-700 shadow-lg transition hover:-translate-y-1" href="#precio">ADQUIERE TU APP <span className="ml-2">→</span></Link>
         </div>
       </section>
 

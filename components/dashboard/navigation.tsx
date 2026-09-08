@@ -13,12 +13,13 @@ const userItems: { href: string; label: string; icon: IconName; accent: string }
   { href: "/dashboard/services", label: "Servicios", icon: "services", accent: "bg-amber-100 text-amber-700" },
   { href: "/dashboard/materials", label: "Materiales", icon: "materials", accent: "bg-emerald-100 text-emerald-700" },
   { href: "/dashboard/profitability", label: "Rentabilidad", icon: "profit", accent: "bg-fuchsia-100 text-fuchsia-700" },
-  { href: "/dashboard/plan", label: "Mi plan", icon: "plan", accent: "bg-orange-100 text-orange-700" },
+  { href: "/dashboard/plan", label: "Mi acceso", icon: "plan", accent: "bg-orange-100 text-orange-700" },
   { href: "/dashboard/account", label: "Mi cuenta", icon: "account", accent: "bg-indigo-100 text-indigo-700" },
   { href: "/dashboard/support", label: "Soporte", icon: "support", accent: "bg-cyan-100 text-cyan-700" },
 ];
 
 const adminItems: { href: string; label: string; icon: IconName; accent: string }[] = [
+  { href: "/admin/purchases", label: "Compras y accesos", icon: "plan", accent: "bg-violet-100 text-violet-700" },
   { href: "/admin", label: "Resumen", icon: "home", accent: "bg-violet-100 text-violet-700" },
   { href: "/admin/users", label: "Usuarios", icon: "customers", accent: "bg-sky-100 text-sky-700" },
   { href: "/admin/subscriptions", label: "Suscripciones", icon: "plan", accent: "bg-amber-100 text-amber-700" },

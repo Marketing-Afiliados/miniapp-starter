@@ -1,6 +1,6 @@
 # Magics DecoQuote
 
-DecoQuote es una Mini App SaaS para decoradoras de eventos. Permite registrar clientes, reutilizar servicios y materiales, calcular el costo real de un montaje, aplicar margen, conocer la ganancia estimada y generar una propuesta PDF profesional.
+DecoQuote es una mini app de pago único para decoradoras de eventos. Permite registrar clientes, reutilizar servicios y materiales, calcular el costo real de un montaje, aplicar margen, conocer la ganancia estimada y generar una propuesta PDF profesional.
 
 > “Cotiza tus decoraciones con confianza y conoce cuánto realmente ganas.”
 
@@ -9,7 +9,7 @@ DecoQuote es una Mini App SaaS para decoradoras de eventos. Permite registrar cl
 - Next.js 16, React 19, TypeScript estricto y App Router.
 - Tailwind CSS 4, diseño responsive y mobile-first.
 - Supabase Auth, PostgreSQL, SSR y Row Level Security.
-- Hotmart Webhook 2.0 para suscripciones.
+- Hotmart Webhook 2.0 para pago único, conservando integración histórica.
 - Vercel y pnpm.
 - Monolito modular: UI, Server Actions, dominio y persistencia en una sola aplicación.
 
@@ -28,7 +28,7 @@ La autenticación, billing, planes, usage, webhooks y panel admin del Starter se
 - Historial, filtros, detalle, edición, cambio de estado y duplicado.
 - PDF comercial sin costo interno, margen ni ganancia.
 - Rentabilidad estimada por mes, últimos 30 días o año.
-- Plan DecoQuote Pro y consumo mensual.
+- Licencia, soporte y actualizaciones gratis de por vida por USD 12.99, sin cuotas de uso.
 - Admin existente con métricas DecoQuote adicionales.
 
 ## Motor de cálculo
@@ -124,120 +124,27 @@ pnpm build
 
 Los tests obligatorios cubren markup del 40%, margen fijo, pérdida y cantidad por costo unitario.
 
-## Variables de entorno
+## Pago único y publicación
 
-| Variable | Tipo | Uso |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Pública | URL del proyecto Supabase. |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Pública | Publishable key de Supabase. |
-| `NEXT_PUBLIC_SITE_URL` | Pública | URL canónica de producción. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Secreta | Webhook y conciliación confiable. |
-| `HOTMART_HOTTOK` | Secreta | Autenticación de Webhook 2.0. |
-| `HOTMART_DEFAULT_PLAN_CODE` | Privada/opcional | Fallback legado; dejar vacío cuando existen varios planes Hotmart. |
-| `DECOQUOTE_DEV_ACCESS` | Privada/opcional | Bypass temporal para QA sin suscripción. |
+La oferta actual es **Magics DecoQuote — pago único de USD 12.99**: licencia de por vida, todas las funcionalidades sin cuotas de uso y soporte/actualizaciones gratis de por vida. No hay suscripción ni renovación para nuevos compradores.
 
-No subas `.env.local`. Para una prueba temporal en Vercel Production puedes usar `DECOQUOTE_DEV_ACCESS=true`, desplegar y retirarla al terminar. Nunca la dejes habilitada cuando entren usuarios normales.
+Lee [la guía de migración y publicación](DECOQUOTE-PAYMENT-DEPLOYMENT.md) antes de configurar Hotmart, aplicar SQL o desplegar. Incluye variables, acceso, usuarios históricos, pruebas, pasos de producción y rollback. Los precios/mapeos de migraciones anteriores son historial: no reaplicar sus seeds ni utilizarlos para ventas nuevas.
 
-## Supabase
+Nueva migración: `supabase/migrations/202609070001_one_time_access.sql`. Debe aplicarse y configurarse primero en una base aislada. Requiere todas las migraciones anteriores; no borra datos. Configura `payment_settings` y `payment_offers` con datos reales según la guía. Después de migrar, los usuarios sin compra/suscripción no pueden utilizar funciones del producto; cuenta, soporte y Mi acceso continúan disponibles.
 
-### Aplicar migraciones
+`.env.example` contiene los nombres necesarios sin credenciales. `HOTMART_ONE_TIME_ENABLED=false` mantiene la compra deshabilitada hasta verificar webhook, checkout real, condiciones y entrega. El checkout real está indicado en `.env.example`; debe configurarse también en Vercel y validarse con el mapeo de producto/oferta.
 
-En un proyecto ya configurado, aplica las migraciones DecoQuote en orden:
-
-```text
-supabase/migrations/202608090004_decoquote.sql
-supabase/migrations/202608100001_business_logo_storage.sql
-supabase/migrations/202608100002_business_country.sql
-supabase/migrations/202608110001_hotmart_multi_plan.sql
-supabase/migrations/202608110002_decoquote_plans.sql
-supabase/migrations/202608120001_global_creative_catalog.sql
-```
-
-Con Supabase CLI:
-
-```bash
-supabase link --project-ref TU_PROJECT_REF
-supabase db push
-```
-
-O copia el contenido completo en Supabase Dashboard → SQL Editor → New query → Run.
-
-Las migraciones son incrementales: no contienen `DROP TABLE`, no borran Auth ni las tablas del Starter. La segunda crea el bucket público `business-logos`, limita archivos a PNG/JPG de 2 MB y protege escritura/eliminación por propietario mediante RLS. La tercera agrega el país del negocio para ofrecer USD, EUR y la moneda local correspondiente. Las últimas migraciones agregan el mapeo Hotmart multi-plan y crean o actualizan:
-
-```text
-code: decoquote-emprende
-price: 9.99 USD / month
-  quotes_per_month: 50
-  pdf_generations_per_month: 50
-  customers: -1
-
-code: decoquote-pro
-price: 19.99 USD / month
-  quotes_per_month: -1
-  pdf_generations_per_month: -1
-  customers: -1
-```
-
-`-1` significa uso ilimitado.
-
-La migración global crea 10 categorías, 27 subcategorías y 237 ítems base. Los
-importes parten en cero; cada negocio define sus valores mediante overrides RLS.
-Consulta `docs/global-creative-catalog-migration.md` para validación y rollback.
-
-Después de aplicarla, usa Table Editor para revisar las seis tablas de producto.
-
-### Auth
-
-En Authentication → URL Configuration:
-
-- Site URL: URL Production de Vercel.
-- Redirect URL local: `http://localhost:3000/auth/callback`.
-- Redirect URL Production: `https://TU-DOMINIO/auth/callback`.
-
-## Hotmart
-
-La infraestructura existente sigue usando:
-
-```text
-POST /api/webhooks/hotmart
-```
-
-Cuando el producto exista:
-
-1. Crea el producto/suscripción DecoQuote Pro en Hotmart.
-2. En cada fila de `plans`, guarda el mismo producto en `provider_product_id` y diferencia Emprende/Pro mediante `provider_offer_code` (`purchase.offer.code`) y `provider_plan_id` (`subscription.plan.id`).
-3. Los checkouts públicos se centralizan en `lib/decoquote/constants.ts`; la landing enlaza Emprende con `r5jsptik` y Pro con `lyyel4u7`.
-4. Configura el Webhook 2.0 con la URL Production.
-5. Configura `HOTMART_HOTTOK` en Vercel.
-6. Activa eventos de compra aprobada/completa, retrasada, cancelada, expirada, reembolso y chargeback.
-7. Ejecuta una compra de prueba y comprueba `/admin/webhooks` y `/admin/subscriptions`.
-
-Flujo:
-
-```text
-Hotmart → webhook autenticado → subscription active → acceso DecoQuote Pro
-```
-
-El acceso se consulta centralmente en `lib/decoquote/access.ts` y reutiliza `lib/billing/access.ts`.
+La autenticación usa confirmación de email Supabase. Configurar Site URL y `/auth/callback` en Local/Preview/Production. No hay bypass de acceso mediante `DECOQUOTE_DEV_ACCESS`.
 
 ## PDF
 
-`GET /api/quotes/[id]/pdf` valida sesión, propiedad y plan. `pdf-lib` genera la propuesta en servidor.
+`GET /api/quotes/[id]/pdf` valida sesión, propiedad y acceso (incluidas condiciones históricas cuando corresponda). `pdf-lib` genera la propuesta en servidor.
 
 Incluye negocio, cliente, evento, conceptos, cantidad, importes comerciales reconciliados, subtotal, total y condiciones. Montaje, logística y servicios adicionales aparecen como rubros comerciales cuando corresponden. No incluye costos internos, margen ni rentabilidad.
 
 ## Vercel
 
-1. Sube todos los cambios y la migración a GitHub.
-2. Importa o reutiliza el proyecto Vercel.
-3. Framework Preset: Next.js.
-4. Build Command: `pnpm build`.
-5. Install Command: automático o `pnpm install`.
-6. Output Directory: **sin Override**; debe mostrar `Next.js default`.
-7. Configura las variables anteriores para Production y las públicas necesarias para Preview.
-8. Para QA sin Hotmart, configura temporalmente `DECOQUOTE_DEV_ACCESS=true`, vuelve a desplegar y prueba cotizaciones/PDF.
-9. Retira `DECOQUOTE_DEV_ACCESS` y vuelve a desplegar antes de abrir el producto a usuarios.
-10. Actualiza Site URL/Redirect URLs en Supabase si cambia el dominio.
+Usar pnpm y el preset Next.js, sin override del directorio de salida. Seguir la secuencia de [publicación](DECOQUOTE-PAYMENT-DEPLOYMENT.md): migraciones compatibles, backend, webhook, verificación y landing al final. Preview debe utilizar Supabase aislado. No desplegar a Production ni configurar proveedores sin autorización.
 
 ## Rutas principales
 
@@ -253,7 +160,9 @@ Incluye negocio, cliente, evento, conceptos, cantidad, importes comerciales reco
 /dashboard/quotes/[id]
 /dashboard/quotes/[id]/edit
 /dashboard/profitability
-/dashboard/plan
+/dashboard/plan (Mi acceso)
+/admin/purchases
+/api/webhooks/hotmart/one-time
 /dashboard/account/business
 /api/quotes/[id]/pdf
 ```

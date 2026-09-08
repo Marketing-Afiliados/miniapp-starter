@@ -2,14 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { duplicateQuoteAction, updateQuoteStatusAction } from "@/app/dashboard/quotes/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { QUOTE_STATUS_LABEL } from "@/lib/decoquote/constants";
 import { formatCurrency } from "@/lib/decoquote/money";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function QuoteDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const { id } = await params;
   const { saved } = await searchParams;
   const supabase = await createClient();

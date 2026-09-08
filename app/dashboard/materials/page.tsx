@@ -4,14 +4,14 @@ import { CatalogBrowser } from "@/components/decoquote/catalog-browser";
 import { MaterialForm } from "@/components/decoquote/material-form";
 import { PersonalizedCatalogCard } from "@/components/decoquote/personalized-catalog-card";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { filterPersonalizedCatalogItems } from "@/lib/decoquote/catalog";
 import { loadCatalogForUser } from "@/lib/decoquote/catalog-server";
 import { formatCurrency } from "@/lib/decoquote/money";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MaterialsPage({ searchParams }: { searchParams: Promise<{ q?: string; scope?: string }> }) {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const { q = "", scope = "mine" } = await searchParams;
   const supabase = await createClient();
   let query = supabase.from("materials").select("*").eq("user_id", user.id).order("active", { ascending: false }).order("name");

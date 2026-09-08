@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s | DecoQuote",
   },
   description:
-    "Calcula costos, margen y ganancia. Crea cotizaciones profesionales para tus eventos en minutos.",
+    "Magics DecoQuote: pago único de USD 12.99. Cotiza mejor, conoce tu ganancia y obtén licencia, soporte y actualizaciones gratis de por vida.",
   openGraph: {
     type: "website",
     locale: "es_EC",

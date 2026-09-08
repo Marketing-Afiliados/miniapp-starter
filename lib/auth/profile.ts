@@ -21,5 +21,6 @@ export async function ensureProfile(user: User) {
     if (error) return;
   }
 
+  await supabase.rpc("claim_one_time_purchases");
   await reconcilePendingHotmartEvents(user);
 }

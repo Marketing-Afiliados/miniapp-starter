@@ -9,7 +9,7 @@ export default function SupportPage() {
       <PageHeader
         eyebrow="Estamos para ayudarte"
         title="Soporte"
-        description="Aclara tus dudas sobre DecoQuote, tu cuenta, los planes o la creación de propuestas."
+        description="Aclara tus dudas sobre DecoQuote, tu cuenta, tu acceso o la creación de propuestas."
       />
 
       <section className="mt-8 grid gap-5 lg:grid-cols-2">

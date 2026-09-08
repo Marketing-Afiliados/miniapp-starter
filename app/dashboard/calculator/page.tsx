@@ -2,11 +2,11 @@ import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { QuickCalculator } from "@/components/decoquote/quick-calculator";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function CalculatorPage() {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const supabase = await createClient();
   const { data: business } = await supabase
     .from("business_profiles")

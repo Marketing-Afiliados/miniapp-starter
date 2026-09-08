@@ -17,28 +17,15 @@ export interface FeatureAccess {
 
 export async function getActiveSubscription(userId: string): Promise<SubscriptionAccess | null> {
   const supabase = await createClient();
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!subscription) return null;
-  if (subscription.current_period_end && new Date(subscription.current_period_end) <= new Date()) {
-    return null;
+  const { data: subscriptions } = await supabase.from("subscriptions").select("*")
+    .eq("user_id", userId).eq("status", "active")
+    .order("created_at", { ascending: false });
+  for (const subscription of subscriptions ?? []) {
+    if (subscription.current_period_end && new Date(subscription.current_period_end) <= new Date()) continue;
+    const { data: plan } = await supabase.from("plans").select("*").eq("id", subscription.plan_id).eq("active", true).maybeSingle();
+    if (plan) return { subscription, plan };
   }
-
-  const { data: plan } = await supabase
-    .from("plans")
-    .select("*")
-    .eq("id", subscription.plan_id)
-    .eq("active", true)
-    .maybeSingle();
-
-  return plan ? { subscription, plan } : null;
+  return null;
 }
 
 export async function hasActiveSubscription(userId: string) {
