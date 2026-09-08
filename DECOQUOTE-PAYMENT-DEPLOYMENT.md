@@ -7,7 +7,9 @@
 - El propietario confirma que habilitó en Hotmart el webhook https://decoquote.magicsglobes.com/api/webhooks/hotmart/one-time. Esto no acredita todavía recepción/procesamiento en el backend desplegado.
 - Falta confirmar el ID/ucode del producto enviado por Hotmart. Y107492007M es el identificador del enlace de pago; no se utiliza como product.id/ucode sin evidencia.
 - Pendientes de verificar: migración aplicada, despliegue de esta rama, Hottok/service role en Vercel, ambiente production, mapeo de oferta en Supabase y URL de condiciones publicadas. No compartir secretos en mensajes.
-- El CTA permanece deshabilitado hasta completar estas comprobaciones; no se realizó una compra real.
+- El propietario solicitó habilitar el checkout: ahora está activo por defecto en el código, con el enlace real centralizado. HOTMART_ONE_TIME_ENABLED=false permite desactivarlo explícitamente. La URL separada de condiciones es opcional para el botón; no se inventa una URL. No se realizó una compra real.
+- Diagnóstico posterior: el Supabase configurado localmente respondió 404/PGRST205 a una lectura de purchases (sin datos personales), mientras /login público respondió 200. Falta exponer/aplicar la migración en ese proyecto. El login ahora conserva sesión y acceso histórico/administrativo si el sistema de compras no está disponible; para nuevos compradores muestra estado de verificación temporalmente no disponible, sin inventar acceso.
+- Antes de desplegar esta activación de ventas al sitio público, completar la migración/mapeo y las variables de servidor. El código habilitado en esta rama no certifica que producción pueda procesar compras.
 
 ## Oferta confirmada
 
@@ -76,7 +78,7 @@ Con revoke_on_refund=true, un evento confirmado de reembolso total/contracargo r
 
 DECOQUOTE_DEV_ACCESS deja de habilitar acceso. Para QA usar fixtures/compra de prueba y derechos válidos, no bypass en producción. Los administradores activos conservan acceso administrativo.
 
-El flag de venta solo controla el CTA: deshabilitar ventas no interrumpe recepción de eventos ni derechos de compradores. La URL de checkout se acepta exclusivamente HTTPS en pay.hotmart.com, sin credenciales embebidas. El checkout real figura en la configuración local; falta confirmar su configuración en Vercel. Los destinos se leen centralmente en el servidor.
+El flag de venta solo controla el CTA (activo por defecto por solicitud del propietario): deshabilitar ventas no interrumpe recepción de eventos ni derechos de compradores. La URL de checkout se acepta exclusivamente HTTPS en pay.hotmart.com, sin credenciales embebidas. El checkout real figura en la configuración local; falta confirmar su configuración en Vercel. Los destinos se leen centralmente en el servidor.
 
 No se añaden Edge Functions ni secretos en Supabase Edge. En Supabase se configura Auth (confirmación email, Site URL y callbacks), esquema, ambiente y ofertas. Hottok/service role residen en Vercel, no en variables públicas ni logs.
 
@@ -141,7 +143,7 @@ Deshabilitar HOTMART_ONE_TIME_ENABLED y redeploy para cerrar nuevas ventas, cons
 
 ## Validación y límites actuales
 
-Pruebas unitarias y PostgreSQL embebido cubren compra aprobada/pendiente, cancelada, duplicados, retry, errores de mapeo/ambiente, compra antes/después del registro, correo no verificado/diferente, devoluciones, contracargo, desorden de eventos, persistencia, RLS, cotización, cálculo/rentabilidad y PDF. Incluyen autenticación HTTP y cuerpo malformado/excesivo. Resultado actual: 14 archivos y 80 tests aprobados. TypeScript y ESLint aprobados; diff sin errores de espacios.
+Pruebas unitarias y PostgreSQL embebido cubren compra aprobada/pendiente, cancelada, duplicados, retry, errores de mapeo/ambiente, compra antes/después del registro, correo no verificado/diferente, devoluciones, contracargo, desorden de eventos, persistencia, RLS, cotización, cálculo/rentabilidad y PDF. Incluyen autenticación HTTP y cuerpo malformado/excesivo. Resultado actualizado: 18 archivos y 92 tests aprobados. Incluye regresiones de sesión, cookies, contraseñas y esquema de compras no disponible. TypeScript y ESLint aprobados; diff sin errores de espacios.
 
 pnpm build está bloqueado en este entorno por Turbopack al abrir un puerto. El intento alternativo con Webpack también encontró un problema del entorno: el subprocess TypeScript --showConfig devuelve stdout vacío. No se deshabilitaron comprobaciones ni se alteró Next para ocultarlo. El build debe verificarse en CI/Preview antes de publicar.
 

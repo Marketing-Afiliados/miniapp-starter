@@ -37,9 +37,10 @@ describe("one-time Hotmart contract", () => {
   });
 });
 describe("lifetime offer", () => {
-  it("has one price and fails closed without verified commercial configuration", () => {
+  it("has one price and the owner-authorized checkout with an explicit off switch", () => {
     expect(DECOQUOTE_PRODUCT.priceCents).toBe(1299);
-    expect(getCheckoutConfiguration({}).checkoutUrl).toBeNull();
+    expect(getCheckoutConfiguration({}).checkoutUrl).toBe(DECOQUOTE_PRODUCT.checkoutUrl);
+    expect(getCheckoutConfiguration({ HOTMART_ONE_TIME_ENABLED: "false" }).checkoutUrl).toBeNull();
     expect(getCheckoutConfiguration({ HOTMART_ONE_TIME_ENABLED: "true", HOTMART_CHECKOUT_URL: "https://example.com", DECOQUOTE_TERMS_URL: "https://example.com/terms" }).checkoutUrl).toBeNull();
     expect(getCheckoutConfiguration({ HOTMART_ONE_TIME_ENABLED: "true", HOTMART_CHECKOUT_URL: "https://pay.hotmart.com/TEST", DECOQUOTE_TERMS_URL: "https://example.com/terms" }).checkoutUrl).toBe("https://pay.hotmart.com/TEST");
   });

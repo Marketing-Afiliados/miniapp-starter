@@ -132,7 +132,7 @@ Lee [la guía de migración y publicación](DECOQUOTE-PAYMENT-DEPLOYMENT.md) ant
 
 Nueva migración: `supabase/migrations/202609070001_one_time_access.sql`. Debe aplicarse y configurarse primero en una base aislada. Requiere todas las migraciones anteriores; no borra datos. Configura `payment_settings` y `payment_offers` con datos reales según la guía. Después de migrar, los usuarios sin compra/suscripción no pueden utilizar funciones del producto; cuenta, soporte y Mi acceso continúan disponibles.
 
-`.env.example` contiene los nombres necesarios sin credenciales. `HOTMART_ONE_TIME_ENABLED=false` mantiene la compra deshabilitada hasta verificar webhook, checkout real, condiciones y entrega. El checkout real está indicado en `.env.example`; debe configurarse también en Vercel y validarse con el mapeo de producto/oferta.
+`.env.example` contiene los nombres necesarios sin credenciales. El checkout real está habilitado por defecto por solicitud del propietario. `HOTMART_ONE_TIME_ENABLED=false` permite desactivarlo. Antes de desplegar la activación pública debe estar operativa la migración, el mapeo Hotmart y la entrega. El checkout real está indicado en `.env.example`; debe configurarse también en Vercel y validarse con el mapeo de producto/oferta.
 
 La autenticación usa confirmación de email Supabase. Configurar Site URL y `/auth/callback` en Local/Preview/Production. No hay bypass de acceso mediante `DECOQUOTE_DEV_ACCESS`.
 

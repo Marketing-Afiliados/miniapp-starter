@@ -22,4 +22,14 @@ describe("single purchase landing", () => {
     expect(html).toContain('href="https://pay.hotmart.com/TEST-ONLY"');
     expect(html).toContain('href="https://example.com/terms"');
   });
+  it("enables the owner-provided checkout even without a separate terms URL", () => {
+    vi.stubEnv("HOTMART_ONE_TIME_ENABLED", "true");
+    vi.stubEnv("HOTMART_CHECKOUT_URL", "");
+    vi.stubEnv("DECOQUOTE_TERMS_URL", "");
+    const html = renderToStaticMarkup(<HomePage />);
+    expect(html).toContain('href="https://pay.hotmart.com/Y107492007M?off=ij6szo4g"');
+    expect(html).toContain("ADQUIERE TU APP");
+    expect(html).not.toContain("Compra disponible próximamente");
+  });
+
 });
