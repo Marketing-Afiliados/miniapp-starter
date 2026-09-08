@@ -23,7 +23,8 @@ export async function loginAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   const email = field(formData, "email").toLowerCase();
-  const password = field(formData, "password");
+  const passwordValue = formData.get("password");
+  const password = typeof passwordValue === "string" ? passwordValue : "";
   const fieldErrors: AuthActionState["fieldErrors"] = {};
 
   if (!isEmail(email)) fieldErrors.email = "Ingresa un correo válido.";
@@ -52,7 +53,8 @@ export async function registerAction(
 ): Promise<AuthActionState> {
   const fullName = field(formData, "fullName");
   const email = field(formData, "email").toLowerCase();
-  const password = field(formData, "password");
+  const passwordValue = formData.get("password");
+  const password = typeof passwordValue === "string" ? passwordValue : "";
   const fieldErrors: AuthActionState["fieldErrors"] = {};
 
   if (fullName.length < 2) fieldErrors.fullName = "Ingresa tu nombre completo.";
@@ -122,7 +124,8 @@ export async function updatePasswordAction(
   _previousState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const password = field(formData, "password");
+  const passwordValue = formData.get("password");
+  const password = typeof passwordValue === "string" ? passwordValue : "";
 
   if (password.length < 8) {
     return {

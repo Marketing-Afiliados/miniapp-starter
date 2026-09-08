@@ -17,7 +17,9 @@ export async function saveQuoteAction(_state: ActionState, formData: FormData): 
   if (!quoteId) {
     const access = await canUseDecoQuoteFeature(user.id, "quotes");
     if (!access.allowed) {
-      const message = access.reason === "no_access"
+      const message = access.reason === "access_unavailable"
+        ? "No pudimos verificar tu acceso. Inténtalo nuevamente; no necesitas volver a pagar."
+        : access.reason === "no_access"
         ? "Tu cuenta todavía no tiene un acceso activo. Consulta Mi acceso."
         : "Alcanzaste el límite de cotizaciones de tu suscripción histórica. Consulta Mi acceso.";
       return { status: "error", message };

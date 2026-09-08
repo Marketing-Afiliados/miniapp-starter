@@ -13,10 +13,12 @@ export default async function AccessPage() {
   const { termsUrl } = getCheckoutConfiguration(process.env);
   const supabase = await createClient();
   const { data: subscriptions, error } = await supabase.from("subscriptions").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-  if (error) throw new Error("No se pudo consultar tu historial de acceso.");
+
   return <div>
     <PageHeader eyebrow="Tu producto" title="Mi acceso" description="Consulta tus compras y el estado real de tu acceso a Magics DecoQuote." />
     <section className="mt-8 space-y-5">
+      {access.unavailable ? <article className="rounded-2xl border border-amber-200 bg-amber-50 p-6" role="status"><h2 className="text-xl font-bold">Tu sesión está iniciada</h2><p className="mt-3">No pudimos verificar tu compra en este momento. No necesitas volver a pagar. Inténtalo nuevamente o contacta a soporte.</p><Link className="mt-4 inline-block font-bold text-violet-700" href="/dashboard/plan">Volver a comprobar mi acceso</Link></article> : null}
+      {error ? <p className="rounded-2xl bg-amber-50 p-5">No pudimos consultar tus suscripciones anteriores. Inténtalo nuevamente.</p> : null}
       {access.purchases.map(purchase => {
         const entitlement = access.entitlements.find(e => e.purchase_id === purchase.id);
         return <article key={purchase.id} className="app-card-soft p-6 sm:p-8">
@@ -29,10 +31,10 @@ export default async function AccessPage() {
           </dl>
           <p className="mt-5">Licencia de por vida, todas las funcionalidades sin cuotas de uso, soporte y actualizaciones gratis de por vida.</p>
           {entitlement?.status === "revoked" ? <p className="mt-4 text-rose-700">Acceso revocado el {formatDate(entitlement.revoked_at)}. Contacta a soporte para revisar tu compra.</p> : null}
-          {!entitlement ? <p className="mt-4 text-amber-800">Esta compra todavía no tiene un acceso activo. Si tu pago ya fue confirmado, contacta a soporte con el número de transacción.</p> : null}
+          {!access.unavailable && !entitlement ? <p className="mt-4 text-amber-800">Esta compra todavía no tiene un acceso activo. Si tu pago ya fue confirmado, contacta a soporte con el número de transacción.</p> : null}
         </article>;
       })}
-      {!access.purchases.length ? <article className="app-card-soft p-6"><h2 className="text-xl font-bold">Sin compra de pago único vinculada</h2><p className="mt-3">Si ya compraste, confirma tu correo e ingresa con la misma dirección utilizada en Hotmart. La activación depende de la confirmación del pago.</p><p className="mt-3">Si compraste con otro correo, contacta a soporte para verificar y vincular la compra de forma segura.</p><Link className="mt-5 inline-block font-bold text-violet-700" href="/#precio">Conocer la oferta</Link></article> : null}
+      {!access.unavailable && !access.purchases.length ? <article className="app-card-soft p-6"><h2 className="text-xl font-bold">Sin compra de pago único vinculada</h2><p className="mt-3">Si ya compraste, confirma tu correo e ingresa con la misma dirección utilizada en Hotmart. La activación depende de la confirmación del pago.</p><p className="mt-3">Si compraste con otro correo, contacta a soporte para verificar y vincular la compra de forma segura.</p><Link className="mt-5 inline-block font-bold text-violet-700" href="/#precio">Conocer la oferta</Link></article> : null}
       {profile?.role === "admin" && profile.status === "active" ? <p className="rounded-2xl bg-violet-50 p-5">Tienes acceso administrativo. Esto no representa una compra.</p> : null}
       {(subscriptions ?? []).map(subscription => <article key={subscription.id} className="app-card-soft p-6"><h2 className="text-xl font-bold">Suscripción histórica</h2><p className="mt-3">Esta adquisición conserva su modalidad y condiciones anteriores. La nueva oferta no cancela ni convierte automáticamente tu suscripción.</p><div className="mt-4"><StatusBadge status={subscription.status} /></div><p className="mt-3">Período registrado hasta: {formatDate(subscription.current_period_end)}</p><p className="mt-2 text-sm text-slate-600">Identificador: {subscription.provider_subscription_id ?? "No disponible"}</p></article>)}
       <p><Link className="font-bold text-violet-700" href="/dashboard/support">Contactar a soporte</Link>{termsUrl ? <> · <a className="underline" href={termsUrl}>Condiciones comerciales</a></> : null}</p>

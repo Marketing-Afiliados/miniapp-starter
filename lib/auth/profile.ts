@@ -4,6 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { reconcilePendingHotmartEvents } from "@/services/hotmart-webhook";
 
 export async function ensureProfile(user: User) {
+  try {
+    await syncProfile(user);
+  } catch {
+    // Authentication already succeeded. Billing/profile synchronization is retried
+    // on a later login or access check and must not discard the new session.
+  }
+}
+
+async function syncProfile(user: User) {
   const supabase = await createClient();
   const { data: existing } = await supabase
     .from("profiles")
@@ -21,6 +30,10 @@ export async function ensureProfile(user: User) {
     if (error) return;
   }
 
-  await supabase.rpc("claim_one_time_purchases");
+  try {
+    await supabase.rpc("claim_one_time_purchases");
+  } catch {
+    // Continue legacy reconciliation even when the new schema is unavailable.
+  }
   await reconcilePendingHotmartEvents(user);
 }

@@ -28,14 +28,20 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
 
+  function redirectWithSession(url: URL) {
+    const redirected = NextResponse.redirect(url);
+    response.cookies.getAll().forEach(cookie => redirected.cookies.set(cookie));
+    return redirected;
+  }
+
   if (!user && protectedPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("message", "Debes iniciar sesión para continuar");
-    return NextResponse.redirect(loginUrl);
+    return redirectWithSession(loginUrl);
   }
 
   if (user && guestOnlyPaths.includes(pathname)) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return redirectWithSession(new URL("/dashboard", request.url));
   }
 
   return response;
