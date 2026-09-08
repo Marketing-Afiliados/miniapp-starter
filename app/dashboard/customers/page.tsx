@@ -3,11 +3,11 @@ import { archiveCustomerAction } from "@/app/dashboard/decoquote-actions";
 import { ConfirmAction } from "@/components/decoquote/confirm-action";
 import { CustomerForm } from "@/components/decoquote/customer-form";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const { q = "" } = await searchParams;
   const supabase = await createClient();
   let query = supabase.from("customers").select("*").eq("user_id", user.id).is("deleted_at", null).order("created_at", { ascending: false });

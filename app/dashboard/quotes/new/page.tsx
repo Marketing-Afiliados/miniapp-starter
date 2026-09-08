@@ -2,12 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { QuoteEditor } from "@/components/decoquote/quote-editor";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { loadCatalogForUser } from "@/lib/decoquote/catalog-server";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function NewQuotePage() {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const supabase = await createClient();
   const [{ data: business }, { data: customers }, { data: services }, { data: materials }, catalog] = await Promise.all([
     supabase.from("business_profiles").select("*").eq("user_id", user.id).maybeSingle(),

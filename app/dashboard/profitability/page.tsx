@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/dashboard/page-header";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { formatCurrency } from "@/lib/decoquote/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,7 +11,7 @@ function periodStart(period: string): Date {
 }
 
 export default async function ProfitabilityPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const { period = "month" } = await searchParams;
   const supabase = await createClient();
   const [{ data: quotes }, { data: business }] = await Promise.all([

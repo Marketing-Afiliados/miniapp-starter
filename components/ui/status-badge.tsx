@@ -6,6 +6,7 @@ const styles: Record<string, string> = {
   past_due: "border-amber-200 bg-amber-50 text-amber-700",
   cancelled: "border-slate-200 bg-slate-100 text-slate-600",
   expired: "border-slate-200 bg-slate-100 text-slate-600",
+  revoked: "border-rose-200 bg-rose-50 text-rose-700",
   refunded: "border-rose-200 bg-rose-50 text-rose-700",
   inactive: "border-slate-200 bg-slate-100 text-slate-600",
   suspended: "border-rose-200 bg-rose-50 text-rose-700",
@@ -21,6 +22,7 @@ const labels: Record<string, string> = {
   cancelled: "Cancelado",
   expired: "Expirado",
   refunded: "Reembolsado",
+  revoked: "Revocado",
   inactive: "Inactivo",
   suspended: "Suspendido",
 };

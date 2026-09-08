@@ -101,6 +101,16 @@ export interface WebhookEvent extends Record<string, unknown> {
   created_at: string;
 }
 
+export interface Purchase extends Record<string, unknown> {
+  id: string; offer_id: string; provider: string; environment: string;
+  transaction_id: string; user_id: string | null; buyer_email: string;
+  status: string; amount: number; currency: string; approved_at: string | null;
+  last_event_at: string; terms_version: string; rights: Json; created_at: string;
+}
+export interface Entitlement extends Record<string, unknown> {
+  id: string; purchase_id: string; product_code: string; status: string;
+  activated_at: string; revoked_at: string | null; revocation_reason: string | null; created_at: string;
+}
 export interface BusinessProfile extends Record<string, unknown> {
   id: string;
   user_id: string;
@@ -288,6 +298,8 @@ type TableDefinition<Row, Insert, Update> = {
 export interface Database {
   public: {
     Tables: {
+      purchases: TableDefinition<Purchase, Partial<Purchase>, Partial<Purchase>>;
+      access_entitlements: TableDefinition<Entitlement, Partial<Entitlement>, Partial<Entitlement>>;
       profiles: TableDefinition<
         Profile,
         Pick<Profile, "id" | "email"> & Partial<Omit<Profile, "id" | "email">>,
@@ -383,6 +395,10 @@ export interface Database {
     };
     Views: Record<never, never>;
     Functions: {
+      has_decoquote_access: { Args: Record<never, never>; Returns: boolean };
+      claim_one_time_purchases: { Args: Record<never, never>; Returns: number };
+      process_one_time_purchase: { Args: { p_event: Json; p_environment: string }; Returns: Json };
+      retry_one_time_event: { Args: { p_event_id: string; p_reason: string }; Returns: Json };
       is_admin: {
         Args: Record<never, never>;
         Returns: boolean;

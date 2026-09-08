@@ -12,7 +12,7 @@ export default async function RegisterPage() {
     <AuthShell
       eyebrow="Empieza hoy"
       title="Crea tu cuenta"
-      description="Configura tu espacio en menos de un minuto."
+      description="Usa el correo de tu compra y confírmalo para vincular tu acceso. Crear una cuenta no confirma un pago."
       footer={
         <>
           ¿Ya tienes cuenta?{" "}

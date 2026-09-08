@@ -8,9 +8,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { user } = await requireUser();
   const access = await canUseDecoQuoteFeature(user.id, "pdf_generations");
   if (!access.allowed) {
-    const error = access.reason === "no_subscription"
-      ? "Tu cuenta todavía no tiene una suscripción activa."
-      : "Tu plan no permite generar más PDFs este mes.";
+    const error = access.reason === "no_access"
+      ? "Tu cuenta todavía no tiene un acceso activo. Consulta Mi acceso."
+      : "Alcanzaste el límite de PDF de tu suscripción histórica. Consulta Mi acceso.";
     return Response.json({ error }, { status: 402 });
   }
   const { id } = await params;

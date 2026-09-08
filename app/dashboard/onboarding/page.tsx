@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { BusinessProfileForm } from "@/components/decoquote/business-profile-form";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { displayName } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function OnboardingPage() {
-  const { user, profile } = await requireUser();
+  const { user, profile } = await requireDecoQuoteUser();
   const supabase = await createClient();
   const [{ data: business }, { data: categories }] = await Promise.all([
     supabase.from("business_profiles").select("*").eq("user_id", user.id).maybeSingle(),

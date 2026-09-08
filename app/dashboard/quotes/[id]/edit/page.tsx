@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { QuoteEditor } from "@/components/decoquote/quote-editor";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { loadCatalogForUser } from "@/lib/decoquote/catalog-server";
 import { createClient } from "@/lib/supabase/server";
 import type { QuoteEditorPayload } from "@/types/decoquote";
 
 export default async function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const { id } = await params;
   const supabase = await createClient();
   const [{ data: quote }, { data: items }, { data: business }, { data: customers }, { data: services }, { data: materials }, catalog] = await Promise.all([

@@ -45,6 +45,11 @@ async function findProfile(email: string | null): Promise<Profile> {
     .maybeSingle();
   if (error) throw new HotmartWebhookError("PROFILE_LOOKUP_FAILED", 500);
   if (!data) throw new HotmartWebhookError("PROFILE_NOT_FOUND", 422);
+  const { data: auth, error: authError } = await supabase.auth.admin.getUserById(data.id);
+  if (authError) throw new HotmartWebhookError("PROFILE_LOOKUP_FAILED", 500);
+  if (!auth.user?.email_confirmed_at || auth.user.email?.toLowerCase() !== email.toLowerCase()) {
+    throw new HotmartWebhookError("PROFILE_NOT_FOUND", 422);
+  }
   return data;
 }
 

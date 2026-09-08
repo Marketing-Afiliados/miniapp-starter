@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import {
   BUSINESS_LOGO_BUCKET,
   createBusinessLogoPath,
@@ -32,7 +32,7 @@ export async function saveBusinessProfileAction(
   _state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const result = businessProfileSchema.safeParse({
     businessName: formValue(formData, "businessName"),
     ownerName: formValue(formData, "ownerName"),
@@ -128,7 +128,7 @@ export async function saveCustomerAction(
   _state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const result = customerSchema.safeParse({
     id: formValue(formData, "id") || undefined,
     fullName: formValue(formData, "fullName"),
@@ -159,7 +159,7 @@ export async function saveCustomerAction(
 }
 
 export async function archiveCustomerAction(formData: FormData): Promise<void> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const id = formValue(formData, "id");
   const supabase = await createClient();
   await supabase.from("customers").update({ deleted_at: new Date().toISOString() }).eq("id", id).eq("user_id", user.id);
@@ -170,7 +170,7 @@ export async function saveServiceAction(
   _state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const result = serviceSchema.safeParse({
     id: formValue(formData, "id") || undefined,
     name: formValue(formData, "name"),
@@ -217,7 +217,7 @@ export async function saveServiceAction(
 }
 
 export async function toggleServiceAction(formData: FormData): Promise<void> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const supabase = await createClient();
   await supabase.from("services").update({ active: formValue(formData, "active") === "true" }).eq("id", formValue(formData, "id")).eq("user_id", user.id);
   revalidatePath("/dashboard/services");
@@ -227,7 +227,7 @@ export async function saveMaterialAction(
   _state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const result = materialSchema.safeParse({
     id: formValue(formData, "id") || undefined,
     name: formValue(formData, "name"),
@@ -275,7 +275,7 @@ export async function saveCatalogOverrideAction(
   _state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const result = catalogOverrideSchema.safeParse({
     catalogItemId: formValue(formData, "catalogItemId"),
     unit: formValue(formData, "unit"),
@@ -311,7 +311,7 @@ export async function saveCatalogOverrideAction(
 }
 
 export async function resetCatalogOverrideAction(formData: FormData): Promise<void> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const result = catalogOverrideIdSchema.safeParse({
     catalogItemId: formValue(formData, "id"),
   });
@@ -328,7 +328,7 @@ export async function resetCatalogOverrideAction(formData: FormData): Promise<vo
 }
 
 export async function toggleMaterialAction(formData: FormData): Promise<void> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const supabase = await createClient();
   await supabase.from("materials").update({ active: formValue(formData, "active") === "true" }).eq("id", formValue(formData, "id")).eq("user_id", user.id);
   revalidatePath("/dashboard/materials");

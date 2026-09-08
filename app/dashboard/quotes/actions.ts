@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { canUseDecoQuoteFeature } from "@/lib/decoquote/access";
 import { calculateQuote } from "@/lib/decoquote/calculations";
 import { quoteEditorSchema, zodFieldErrors } from "@/lib/decoquote/validation";
@@ -11,15 +11,15 @@ import type { ActionState } from "@/types/action-state";
 import type { Json, QuoteStatus } from "@/types/database";
 
 export async function saveQuoteAction(_state: ActionState, formData: FormData): Promise<ActionState> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const quoteIdValue = formData.get("quoteId");
   const quoteId = typeof quoteIdValue === "string" && quoteIdValue ? quoteIdValue : null;
   if (!quoteId) {
     const access = await canUseDecoQuoteFeature(user.id, "quotes");
     if (!access.allowed) {
-      const message = access.reason === "no_subscription"
-        ? "Tu cuenta todavía no tiene una suscripción activa."
-        : "Alcanzaste el límite mensual de cotizaciones de tu plan.";
+      const message = access.reason === "no_access"
+        ? "Tu cuenta todavía no tiene un acceso activo. Consulta Mi acceso."
+        : "Alcanzaste el límite de cotizaciones de tu suscripción histórica. Consulta Mi acceso.";
       return { status: "error", message };
     }
   }
@@ -68,7 +68,7 @@ export async function saveQuoteAction(_state: ActionState, formData: FormData): 
 }
 
 export async function updateQuoteStatusAction(formData: FormData): Promise<void> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const id = String(formData.get("id") ?? "");
   const status = String(formData.get("status") ?? "") as QuoteStatus;
   const valid: QuoteStatus[] = ["draft", "sent", "approved", "rejected", "expired", "completed"];
@@ -79,7 +79,7 @@ export async function updateQuoteStatusAction(formData: FormData): Promise<void>
 }
 
 export async function duplicateQuoteAction(formData: FormData): Promise<void> {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const id = String(formData.get("id") ?? "");
   const supabase = await createClient();
   const [{ data: quote }, { data: items }] = await Promise.all([

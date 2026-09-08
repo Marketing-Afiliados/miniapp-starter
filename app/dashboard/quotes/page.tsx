@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { duplicateQuoteAction } from "@/app/dashboard/quotes/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { requireUser } from "@/lib/auth/guards";
+import { requireDecoQuoteUser } from "@/lib/decoquote/access";
 import { QUOTE_STATUS_LABEL } from "@/lib/decoquote/constants";
 import { formatCurrency } from "@/lib/decoquote/money";
 import { formatDate } from "@/lib/format";
@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { QuoteStatus } from "@/types/database";
 
 export default async function QuotesPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; customer?: string }> }) {
-  const { user } = await requireUser();
+  const { user } = await requireDecoQuoteUser();
   const filters = await searchParams;
   const supabase = await createClient();
   let query = supabase.from("quotes").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
